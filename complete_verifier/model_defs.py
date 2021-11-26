@@ -11,6 +11,7 @@
 ##        contained in the LICENCE file in this directory.             ##
 ##                                                                     ##
 #########################################################################
+from io import FileIO
 from torch.nn import functional as F
 import torch.nn as nn
 from collections import OrderedDict
@@ -1106,4 +1107,138 @@ class TradesCNN_no_maxpool(nn.Module):
         logits = self.classifier(features.view(-1, 64 * 4 * 4))
         return logits
 
+import numpy as np
+import torch
+ACTIVS = {
+    "sigmoid": nn.Sigmoid(),
+    "relu": nn.ReLU(True),
+    "tanh": nn.Tanh(),
+    "Affine": None,
+    }
 
+class NeuralNetwork(nn.Module):
+    def __init__(self, path = "./models/polar/attitudecontrol/CLF_controller_layer_num_3_new"):
+        super().__init__()
+        self.path = path
+        self.input_size = None
+        self.output_size = None
+        self.num_layers = None
+        self.layers = None
+        self.load_from_path(path)
+        
+         
+    def load_from_path(self, path = None):
+        if path is None:
+            path = self.path
+        conf_lst = list();
+        layers = []
+        weight_mat = None
+        bias_mat = None
+        with open(path, 'r') as f:
+            line = f.readline()
+            if not line:
+                raise FileNotFoundError("No line in the file {}".format(path))
+            else:
+                self.input_size = int(line)
+                print("Number of Inputs: {}".format(self.input_size))
+            cnt = 1
+            
+            while cnt < 3:
+                line = f.readline()
+                print("Line {}: {}".format(cnt, line.strip()))
+                if cnt == 1:
+                    self.input_size = int(line)
+                    print("Number of Outputs: {}".format(self.output_size))
+                    cnt += 1
+                    continue
+                elif cnt == 2:
+                    self.num_layers = int(line)
+                    print("Number of Hidden Layers: {}".format(self.num_layers))
+                    cnt += 1
+            
+            
+            while cnt < 3 + 2 * self.num_layers:
+                line = f.readline()
+                layers.append(int(line))
+                cnt += 1   
+                if(len(layers) < self.num_layers): 
+                    layers.append(int(line))
+                    print("Layer {} Size: {}".format(\
+                            len(layers), \
+                            layers[-1]))                   
+                else:
+                    print("Activation Function {}: {}".format(\
+                            len(layers) - self.num_layers, \
+                            layers[-1]))    
+                line = f.readline()
+
+            if cnt != 3 + 2 * self.num_layers:
+                raise ValueError("Line count {} does not match {}".format(cnt, 3 + 2 * self.num_layers))
+            else:
+                layer_tuples = [("lin1", nn.Linear(self.input_size, layers[0]))]
+                layer_tuples.append((layers[self.num_layers], ACTIVS[layers[self.num_layers]])),  
+                for i in range(len(self.num_layers) - 1):
+                    layer_tuples.append(
+                        (
+                            "lin{}".format(i + 2), 
+                            nn.Linear(
+                                layers[i], 
+                                layers[i + 1])
+                        )
+                    )
+                    
+                    if ACTIVS[layers[i + 1 + self.num_layers]] is not None:
+                        layer_tuples.append(
+                            (
+                                layers[i + 1 + self.num_layers],
+                                ACTIVS[layers[i + 1 + self.num_layers]]
+                            )
+                        )
+                    
+                    
+                layer_tuples.append(("lin{}".format(len(self.num_layers) + 1), 
+                        nn.Linear(
+                            layers[self.num_layers - 1], 
+                            self.output_size)
+                        )
+                )
+                if ACTIVS[layers[-1]] is not None:
+                        layer_tuples.append(
+                            (
+                                layers[i + 1 + self.num_layers],
+                                ACTIVS[layers[-1]]
+                            )
+                        )
+
+                self.layers = nn.Sequential(OrderedDict(layer_tuples))
+
+            for i_layer in range(len(self.layers)):
+                if not isinstance(self.layers[i_layer], nn.Linear):
+                    continue
+                layer = self.layers[i_layer]
+                weight_mat = np.empty_like((layer.in_features, layer.out_features))
+                bias_mat = np.empty_like((layer.out_features))
+
+                offset = cnt
+                while cnt < offset + weight_mat.shape[0] * weight_mat.shape[1]:
+                    line = f.readline()
+                    coord = np.unravel_index(cnt - offset, weight_mat.shape)
+                    np.put(weight_mat, coord, float(line))
+                    cnt += 1
+                nn.init.constant_(self.layers[i_layer].weight, torch.tensor(weight_mat.T))
+                weight_mat = None
+                offset = cnt
+                while cnt < offset + bias_mat.shape[0]:
+                    line = f.readline()
+                    coord = cnt - offset
+                    np.put(bias_mat, coord, float(line))
+                    cnt += 1
+                nn.init.constant_(self.layers[i_layer].bias, torch.tensor(bias_mat.T))
+                bias_mat = None
+
+            while line:
+                print(line)
+                line = f.readline()
+            
+if __name__ == "__main__":
+    NeuralNetwork
