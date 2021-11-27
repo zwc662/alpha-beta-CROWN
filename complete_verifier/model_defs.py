@@ -1109,6 +1109,7 @@ class TradesCNN_no_maxpool(nn.Module):
 
 import numpy as np
 import torch
+import os
 ACTIVS = {
     "sigmoid": nn.Sigmoid(),
     "relu": nn.ReLU(True),
@@ -1117,7 +1118,7 @@ ACTIVS = {
     }
 
 class NeuralNetwork(nn.Module):
-    def __init__(self, path = "./models/polar/attitudecontrol/CLF_controller_layer_num_3_new"):
+    def __init__(self, path = os.path.join(os.path.dirname(__file__), "./models/polar/attitudecontrol/CLF_controller_layer_num_3_new")):
         super().__init__()
         self.path = path
         self.input_size = None
@@ -1135,7 +1136,7 @@ class NeuralNetwork(nn.Module):
         weight_mat = None
         bias_mat = None
         with open(path, 'r') as f:
-            line = f.readline()
+            line = f.readline().split('\n')[0] 
             if not line:
                 raise FileNotFoundError("No line in the file {}".format(path))
             else:
@@ -1144,10 +1145,10 @@ class NeuralNetwork(nn.Module):
             cnt = 1
             
             while cnt < 3:
-                line = f.readline()
+                line = f.readline().split('\n')[0] 
                 print("Line {}: {}".format(cnt, line.strip()))
                 if cnt == 1:
-                    self.input_size = int(line)
+                    self.output_size = int(line)
                     print("Number of Outputs: {}".format(self.output_size))
                     cnt += 1
                     continue
@@ -1157,9 +1158,9 @@ class NeuralNetwork(nn.Module):
                     cnt += 1
             
             
-            while cnt < 3 + 2 * self.num_layers:
-                line = f.readline()
-                layers.append(int(line))
+            while cnt < 3 + 2 * self.num_layers + 1:
+                line = f.readline().split('\n')[0] 
+                print("Line {}: {}".format(cnt, line))
                 cnt += 1   
                 if(len(layers) < self.num_layers): 
                     layers.append(int(line))
@@ -1167,17 +1168,20 @@ class NeuralNetwork(nn.Module):
                             len(layers), \
                             layers[-1]))                   
                 else:
+                    layers.append(line)
                     print("Activation Function {}: {}".format(\
                             len(layers) - self.num_layers, \
                             layers[-1]))    
-                line = f.readline()
-
-            if cnt != 3 + 2 * self.num_layers:
+            
+            print(self.num_layers,  self.output_size, layers)
+            if cnt != 3 + 2 * self.num_layers + 1:
                 raise ValueError("Line count {} does not match {}".format(cnt, 3 + 2 * self.num_layers))
             else:
+                
                 layer_tuples = [("lin1", nn.Linear(self.input_size, layers[0]))]
                 layer_tuples.append((layers[self.num_layers], ACTIVS[layers[self.num_layers]])),  
-                for i in range(len(self.num_layers) - 1):
+                
+                for i in range(self.num_layers - 1):
                     layer_tuples.append(
                         (
                             "lin{}".format(i + 2), 
@@ -1196,12 +1200,15 @@ class NeuralNetwork(nn.Module):
                         )
                     
                     
-                layer_tuples.append(("lin{}".format(len(self.num_layers) + 1), 
+                layer_tuples.append(
+                    (
+                        "lin{}".format(self.num_layers + 1), 
                         nn.Linear(
                             layers[self.num_layers - 1], 
                             self.output_size)
-                        )
+                    )
                 )
+
                 if ACTIVS[layers[-1]] is not None:
                         layer_tuples.append(
                             (
@@ -1216,29 +1223,35 @@ class NeuralNetwork(nn.Module):
                 if not isinstance(self.layers[i_layer], nn.Linear):
                     continue
                 layer = self.layers[i_layer]
-                weight_mat = np.empty_like((layer.in_features, layer.out_features))
-                bias_mat = np.empty_like((layer.out_features))
+                print(layer.in_features, layer.out_features)
+
+                weight_mat = np.zeros((layer.in_features, layer.out_features))
+                bias_mat = np.zeros((layer.out_features))
 
                 offset = cnt
                 while cnt < offset + weight_mat.shape[0] * weight_mat.shape[1]:
-                    line = f.readline()
+                    line = f.readline().split('\n')[0] 
                     coord = np.unravel_index(cnt - offset, weight_mat.shape)
                     np.put(weight_mat, coord, float(line))
                     cnt += 1
-                nn.init.constant_(self.layers[i_layer].weight, torch.tensor(weight_mat.T))
+                self.state_dict()['layers.lin{}.weight'.format(i_layer)] = torch.tensor(weight_mat.T)
                 weight_mat = None
+
                 offset = cnt
                 while cnt < offset + bias_mat.shape[0]:
-                    line = f.readline()
+                    line = f.readline().split('\n')[0] 
                     coord = cnt - offset
                     np.put(bias_mat, coord, float(line))
                     cnt += 1
-                nn.init.constant_(self.layers[i_layer].bias, torch.tensor(bias_mat.T))
+                self.state_dict()['layers.lin{}.bias'.format(i_layer)] = torch.tensor(bias_mat.T)
                 bias_mat = None
-
+                
+            print("Done")
+            line = f.readline().split('\n')[0] 
             while line:
                 print(line)
-                line = f.readline()
+                line = f.readline().split('\n')[0] 
+                
             
 if __name__ == "__main__":
-    NeuralNetwork
+    nn = NeuralNetwork()
