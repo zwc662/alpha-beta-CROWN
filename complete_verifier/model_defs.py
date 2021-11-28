@@ -1129,7 +1129,10 @@ class AttitudeController(nn.Module):
     
     def forward(self, x):
         return self.layers(x)
- 
+    
+    def filter(self, idx):
+        self.forward = lambda x: self.layer(x)[:, idx:idx+1]
+
          
     def load_from_path(self, path = None):
         if path is None:
