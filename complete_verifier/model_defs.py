@@ -1131,7 +1131,7 @@ class AttitudeController(nn.Module):
         return self.layers(x)
     
     def filter(self, idx):
-        weight_mat = np.zeros((layer.in_features, layer.out_features))
+        weight_mat = np.zeros((self.output_size, self.output_size))
         weight_mat[idx, idx] = 1.
         # Set specific channel to output
         self.state_dict()['layers.lin{}.weight'.format(len(self.layers) - 1)] = torch.tensor(weight_mat.T)
