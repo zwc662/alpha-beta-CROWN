@@ -1133,17 +1133,17 @@ class AttitudeController(nn.Module):
     def filter(self, idx = None, device = 'cuda'):
         if idx is None:
             #self.layers[-1] =  nn.Linear(self.output_size, self.output_size)
-            weight_mat = torch.eye(self.output_size).to(device)
+            weight_mat = torch.eye(self.output_size) 
             # Set specific channel to output
             #self.state_dict()['layers.lin{}.weight'.format(len(self.layers) - 1)] = torch.tensor(weight_mat.T)
-            self.forward = lambda x: self.layers(x).matmul(weight_mat)  
+            self.forward = lambda x: self.layers(x).matmul(weight_mat.to(device))  
         else:
             #self.layers[-1] =  nn.Linear(self.output_size, 1)
-            weight_mat = torch.zeros((self.output_size, 1)).to(device)
+            weight_mat = torch.zeros((self.output_size, 1))
             weight_mat[idx, 0] = 1.
             # Set specific channel to output
             #self.state_dict()['layers.lin{}.weight'.format(len(self.layers) - 1)] = torch.tensor(weight_mat.T)
-            self.forward = lambda x: self.layers(x).matmul(weight_mat)      
+            self.forward = lambda x: self.layers(x).matmul(weight_mat.to(device))      
          
     def load_from_path(self, path = None):
         if path is None:
