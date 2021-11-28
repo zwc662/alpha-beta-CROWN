@@ -2,6 +2,8 @@
 general:
   mode: verified-acc  # Compute verified accuracy.
   #enable_incomplete_verification: False
+model:
+  name: AttitudeController
 data:
   start: 0
   end: 100
