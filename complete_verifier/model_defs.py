@@ -1254,7 +1254,7 @@ class AttitudeController(nn.Module):
                     self.state_dict()['layers.lin{}.bias'.format(i_layer)] = torch.tensor(bias_mat.T)
                     break
                 else:
-                    weight_mat = np.eye((layer.in_features, layer.out_features))
+                    weight_mat = np.zeros((layer.in_features, layer.out_features))
 
                 offset = cnt
                 while cnt < offset + weight_mat.shape[0] * weight_mat.shape[1]:
