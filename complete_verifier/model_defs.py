@@ -1118,7 +1118,7 @@ ACTIVS = {
     }
 
 class AttitudeController(nn.Module):
-    def __init__(self, path = os.path.join(os.path.dirname(__file__), "models/POLAR/attitudecontrol/CLF_controller_layer_num_3_new")):
+    def __init__(self, path = os.path.join(os.path.dirname(__file__), "models/POLAR/AttitudeControl/CLF_controller_layer_num_3_new")):
         super().__init__()
         self.path = path
         self.input_size = None
