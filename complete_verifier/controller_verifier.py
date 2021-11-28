@@ -281,9 +281,9 @@ def main():
         if arguments.Config["general"]["mode"] == "verified-acc":
             if arguments.Config["attack"]["pgd_order"] != "skip":
                 labels_to_verify = attack_margin.argsort().squeeze().tolist()
-            #elif arguments.Config["general"]["enable_incomplete_verification"]:
+            elif arguments.Config["general"]["enable_incomplete_verification"]:
                 # We have initial incomplete bounds.
-            #    labels_to_verify = init_global_lb.argsort().squeeze().tolist()
+                labels_to_verify = init_global_lb.argsort().squeeze().tolist()
             else:
                 labels_to_verify = list(range(arguments.Config["data"]["num_classes"]))
         elif arguments.Config["general"]["mode"] == "runnerup":
