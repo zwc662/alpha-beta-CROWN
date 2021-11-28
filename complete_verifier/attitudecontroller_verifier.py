@@ -42,7 +42,7 @@ def config_args():
 def main():
     with torch.no_grad():
         x_min = torch.tensor(arguments.Config["init"]["min"]).unsqueeze(0)
-        x_max = arguments.Config["init"]["max"]
+        x_max = torch.tensor(arguments.Config["init"]["max"]).unsqueeze(0)
         x = (x_min + x_max)/2.
         perturb_eps = x - x_min
         u_pred = model_ori(x)
