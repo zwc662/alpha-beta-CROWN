@@ -110,7 +110,7 @@ def main():
         x = (x_max + x_min)/2.
         perturb_eps = x - x_min
         u_pred = model_ori(x)
-        print("Given medium input {}".format(u_pred))
+        print("Given medium input {}".format(x))
         print("Attitude controller's output {}".format(u_pred))
 
     # Run step by step
