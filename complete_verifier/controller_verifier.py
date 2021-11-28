@@ -206,8 +206,7 @@ def main():
         x = x.unsqueeze(0).to(dtype=torch.get_default_dtype(), device=arguments.Config["general"]["device"])
         # first check the model is correct at the input
         logit_pred = model_ori(x)[0]
-        print(x.shape, logit_pred.shape)
-        exit(0)
+ 
         y_pred = torch.max(logit_pred, 0)[1].item()
 
         if type(perturb_epsilon) is list:
@@ -265,7 +264,8 @@ def main():
                     data_lb = torch.max(data - perturb_eps, data_min)
             else:
                 data_ub = data_lb = data
-            
+            print(data.shape, data_ub.shape, data_lb.shape)
+            exit(0)
             ############ incomplete_verification execution
             verified_status, init_global_lb, saved_bounds, saved_slopes = incomplete_verifier(model_ori, x, arguments.Config["specification"]["norm"],
                         y, data_ub=data_ub, data_lb=data_lb, eps=perturb_eps)
