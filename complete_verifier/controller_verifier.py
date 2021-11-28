@@ -242,7 +242,7 @@ def main():
                 continue
         
         # continue  # uncomment for checking pgd attacking results
-
+        """
         cnt += 1
         init_global_lb = saved_bounds = saved_slopes = None
 
@@ -277,7 +277,7 @@ def main():
         if verified_success:
             print(f"Result: image {imag_idx} verification success (with incomplete verifier)!")
             continue
-        """
+        
         if arguments.Config["general"]["mode"] == "verified-acc":
             if arguments.Config["attack"]["pgd_order"] != "skip":
                 labels_to_verify = attack_margin.argsort().squeeze().tolist()
@@ -322,7 +322,7 @@ def main():
                 arguments.attack_args = None
             """
             try:
-                if False and arguments.Config["general"]["enable_incomplete_verification"]:
+                if arguments.Config["general"]["enable_incomplete_verification"]:
                     # Reuse results from incomplete results, or from refined MIPs.
                     # skip the prop that already verified
                     print(">>>>>>>>>>>>>>> Reuse results from incomplete results, or from refined MIPs. Skip the prop that already verified")
