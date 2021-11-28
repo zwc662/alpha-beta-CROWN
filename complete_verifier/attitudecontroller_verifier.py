@@ -104,9 +104,9 @@ def main():
     for step in step_ids:
         # Extract each range from the range list
         for idx in range(len(X_max)):
-            for cha in range(len(model_ori.output_size)):
+            for cha in range(model_ori.output_size):
                 model_ori.filter(cha)
-                
+
                 data_max = X_max[idx]
                 data_min = X_min[idx]
                 x = (data_max + data_min)/2.
