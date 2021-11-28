@@ -86,13 +86,13 @@ def main():
     model_ori = AttitudeController().to(arguments.Config["general"]["device"])
 
     # The initial state min, max as a single range are loaded into a list
-    x_min = torch.tensor(arguments.Config["init"]["min"]).unsqueeze(0).to(arguments.Config["general"]["device"])
-    x_max = torch.tensor(arguments.Config["init"]["max"]).unsqueeze(0).to(arguments.Config["general"]["device"])
-    x = (x_max + x_min)/2.
-    perturb_eps = x - x_min
+    data_min = torch.tensor(arguments.Config["init"]["min"]).unsqueeze(0).to(arguments.Config["general"]["device"])
+    data_max = torch.tensor(arguments.Config["init"]["max"]).unsqueeze(0).to(arguments.Config["general"]["device"])
+    x = (data_max + data_min)/2.
+    perturb_eps = x - data_min
 
     # Initialize lists of current and next state ranges and control output ranges 
-    X_min, X_max, U_min, U_max, X_nxt, X_min_nxt, X_max_nxt = [x_min], [x_max], [], [], [], [], []
+    X_min, X_max, U_min, U_max, X_nxt, X_min_nxt, X_max_nxt = [data_min], [data_max], [], [], [], [], []
 
     # Test run the initial control output given a medium state
     with torch.no_grad():
@@ -104,23 +104,24 @@ def main():
     for step in bnb_ids:
         # Extract each range from the range list
         for idx in range(len(X_max)):
-            x_max = X_max[idx]
-            x_min = X_min[idx]
-            x = (x_max + x_min)/2.
+            data_max = X_max[idx]
+            data_min = X_min[idx]
+            x = (data_max + data_min)/2.
+            y = None
 
             if arguments.Config["general"]["enable_incomplete_verification"] or arguments.Config["general"]["complete_verifier"] == "bab-refine":
                 print(">>>>>>>>>>>>>>>Incomplete verification is enabled by default. The intermediate lower and upper bounds will be reused in bab and mip.")
                 start_incomplete = time.time()
                 
                 data = x
-                data_ub = x_max
-                data_lb = x_min
+                data_ub = data_max
+                data_lb = data_min
 
                 ############ incomplete_verification execution
                 verified_status, init_global_lb, saved_bounds, saved_slopes = incomplete_verifier(
                     model_ori = model_ori, data = data, 
                     norm = arguments.Config["specification"]["norm"], \
-                    y = None, data_ub=data_ub, data_lb=data_lb, eps=0.)
+                    y = y, data_ub=data_ub, data_lb=data_lb, eps=0.)
                 ############
                 print(verified_status, init_global_lb, saved_bounds)
                 lower_bounds, upper_bounds = saved_bounds[1], saved_bounds[2]
@@ -139,11 +140,57 @@ def main():
                 raise ValueError("unknown verification mode")
             
             pidx_all_verified = True
+            """
             print("verified_status: ", verified_status)
             print("init_global_lb: ", init_global_lb)
             print("labels_to_verify: ", labels_to_verify)
             print("saved bounds: ", saved_bounds)
-            exit(0)
+            """
+            for pidx in labels_to_verify:
+                if isinstance(pidx, torch.Tensor):
+                    pidx = pidx.item()
+                print('##### [Step {}: range {}] Tested against {} ######'.format(step, idx, pidx))
+            torch.cuda.empty_cache()
+            gc.collect()
+
+            start_inner = time.time()
+            targeted_attack_images = None
+
+            try:
+                if arguments.Config["general"]["enable_incomplete_verification"]:
+                    # Reuse results from incomplete results, or from refined MIPs.
+                    # skip the prop that already verified
+                    print(">>>>>>>>>>>>>>> Reuse results from incomplete results, or from refined MIPs. Skip the prop that already verified")
+                    rlb, rub = list(lower_bounds), list(upper_bounds)
+                    rlb[-1] = rlb[-1][0, pidx]
+                    rub[-1] = rub[-1][0, pidx]
+                    if init_global_lb[0].min().item() - arguments.Config["bab"]["decision_thresh"] <= -100.:
+                        print(f"Initial alpha-CROWN with worst bound {init_global_lb[0].min().item()}. We will run branch and bound.")
+                        l, u, nodes, glb_record = rlb[-1].item(), float('inf'), 0, []
+                    elif init_global_lb[0, pidx] >= arguments.Config["bab"]["decision_thresh"]:
+                        print(f"Initial alpha-CROWN verified for label {pidx} with bound {init_global_lb[0, pidx]}")
+                        l, u, nodes, glb_record = rlb[-1].item(), float('inf'), 0, []
+                    else:
+                        if arguments.Config["bab"]["timeout"] < 0:
+                            print(f"Step {step} range {idx} verification failure (running out of time budget).")
+                            l, u, nodes, glb_record = rlb[-1].item(), float('inf'), 0, []
+                        else:
+                            # feed initialed bounds to save time
+                            l, u, nodes, glb_record = bab(model_ori, x, pidx, arguments.Config["specification"]["norm"], y=y, eps=perturb_eps, data_ub=data_max, data_lb=data_min,
+                                           lower_bounds=lower_bounds, upper_bounds=upper_bounds, reference_slopes=saved_slopes, attack_images=targeted_attack_images)
+                else:
+                    print(">>>>>>>>>>>>>>> Skipped incomplete verification, and refined MIPs. Run complete_verifier: {}".format(arguments.Config["general"]["complete_verifier"]))
+                    assert arguments.Config["general"]["complete_verifier"] == "bab"  # for MIP and BaB-Refine.
+                    # Main function to run verification
+
+                    ################# Run complete verification directly 
+                    l, u, nodes, glb_record = bab(model_ori, x, pidx, arguments.Config["specification"]["norm"], y=y, eps=perturb_eps,
+                                                  data_ub=data_max, data_lb=data_min, attack_images=targeted_attack_images)
+                    #################
+
+                time_cost = time.time() - start_inner
+                print('Step {} range {} output channel {} verification end, final lower bound {}, upper bound {}, time: {}'.format(step, idx, pidx, l, u, time_cost))
+                exit(0)
 
 if __name__ == "__main__":
     config_args()
