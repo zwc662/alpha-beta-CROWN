@@ -1244,16 +1244,17 @@ class AttitudeController(nn.Module):
                     continue
                 layer = self.layers[i_layer]
                 print(layer.in_features, layer.out_features)
-
-               
-                weight_mat = np.eye((layer.in_features, layer.out_features))
+ 
+                
                 bias_mat = np.zeros((layer.out_features))
-
                  # Set default weights/bias for the last layer then break
                 if i_layer == len(self.layers) - 1:
+                    weight_mat = np.eye(self.output_size)
                     self.state_dict()['layers.lin{}.weight'.format(i_layer)] = torch.tensor(weight_mat.T)
                     self.state_dict()['layers.lin{}.bias'.format(i_layer)] = torch.tensor(bias_mat.T)
                     break
+                else:
+                    weight_mat = np.eye((layer.in_features, layer.out_features))
 
                 offset = cnt
                 while cnt < offset + weight_mat.shape[0] * weight_mat.shape[1]:
