@@ -225,7 +225,7 @@ def main():
         verified_success = False
         verified_status = "unknown"
         attack_margin = None
-        
+
         """
         if arguments.Config["attack"]["pgd_order"] == "before":
             start_attack = time.time()
@@ -240,13 +240,13 @@ def main():
                 attack_success.append(imag_idx)
                 print(f"Result: image {imag_idx} attack success!")
                 continue
-        """
+        
         # continue  # uncomment for checking pgd attacking results
 
         cnt += 1
         init_global_lb = saved_bounds = saved_slopes = None
 
-        """
+       
         # Incomplete verification is enabled by default. The intermediate lower and upper bounds will be reused in bab and mip.
         if not verified_success and (arguments.Config["general"]["enable_incomplete_verification"] or arguments.Config["general"]["complete_verifier"] == "bab-refine"):
             print(">>>>>>>>>>>>>>>Incomplete verification is enabled by default. The intermediate lower and upper bounds will be reused in bab and mip.")
@@ -273,17 +273,17 @@ def main():
                 lower_bounds, upper_bounds = saved_bounds[1], saved_bounds[2]
             arguments.Config["bab"]["timeout"] -= (time.time()-start_incomplete)
             ret.append([imag_idx, 0, 0, time.time()-start_incomplete, new_idx, -1, np.inf, np.inf])
-        """
+        
         if verified_success:
             print(f"Result: image {imag_idx} verification success (with incomplete verifier)!")
             continue
-
+        """
         if arguments.Config["general"]["mode"] == "verified-acc":
             if arguments.Config["attack"]["pgd_order"] != "skip":
                 labels_to_verify = attack_margin.argsort().squeeze().tolist()
-            elif arguments.Config["general"]["enable_incomplete_verification"]:
+            #elif arguments.Config["general"]["enable_incomplete_verification"]:
                 # We have initial incomplete bounds.
-                labels_to_verify = init_global_lb.argsort().squeeze().tolist()
+            #    labels_to_verify = init_global_lb.argsort().squeeze().tolist()
             else:
                 labels_to_verify = list(range(arguments.Config["data"]["num_classes"]))
         elif arguments.Config["general"]["mode"] == "runnerup":
@@ -292,7 +292,7 @@ def main():
             labels_to_verify = [target_label[imag_idx]]
         else:
             raise ValueError("unknown verification mode")
-
+        
         pidx_all_verified = True
         for pidx in labels_to_verify:
             if isinstance(pidx, torch.Tensor):
@@ -311,6 +311,7 @@ def main():
             # attack_images shape: (1, batch, restarts, num_class-1, c, h, w)
             # select target label attack_images according to pidx. New shape (restarts, c, h, w).
             targeted_attack_images = None
+            """
             if arguments.Config["attack"]["pgd_order"] == "before":
                 targeted_attack_images = attack_images[0, :, pidx if pidx < y else pidx - 1]
                 attack_args.update({'target': pidx, 'only_target_attack': True})
@@ -319,9 +320,9 @@ def main():
                 arguments.attack_args = attack_args
             else:
                 arguments.attack_args = None
-
+            """
             try:
-                if arguments.Config["general"]["enable_incomplete_verification"]:
+                if False and arguments.Config["general"]["enable_incomplete_verification"]:
                     # Reuse results from incomplete results, or from refined MIPs.
                     # skip the prop that already verified
                     print(">>>>>>>>>>>>>>> Reuse results from incomplete results, or from refined MIPs. Skip the prop that already verified")
