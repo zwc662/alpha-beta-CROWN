@@ -103,6 +103,7 @@ def main():
             model_ori.filter(idx)
             u_pred = model_ori(x)
             print("Attitude controller filtered {}th output {}".format(idx, u_pred))
+        exit(0)
     # Run step by step
     for step in step_ids:
         # Extract each range from the range list
