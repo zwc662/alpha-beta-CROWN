@@ -1125,33 +1125,51 @@ class AttitudeController(nn.Module):
         self.output_size = None
         self.num_layers = None
         self.layers = None
-        self.layer_filter = None
+        self.layer_filters = []
         self.load_from_path(path)
     
     def forward(self, x):
         return self.layers(x)
     
     def filter(self, idx = None, device = 'cuda'):
-        if idx is None:
-            self.layer_filter =  nn.Sequential(OrderedDict([
-                "lin_filter",
-                nn.Linear(self.output_size, self.output_size)
-            ])
-            )
-            weight_mat = torch.eye(self.output_size) 
+        if idx is not None:
+            weight_mat = torch.zeros(self.output_size, 1)
+            weight_mat[idx, 0] = 1.
             # Set specific channel to output
-            self.state_dict()['layer_filter.lin_filter.weight'] = torch.tensor(weight_mat.T.to(device))
-            #self.forward = lambda x: self.layers(x).matmul(weight_mat.to(device))  
+            self.layers["lin_filter"] = nn.Linear(
+                            self.output_size, 
+                            1
+                            )
+            self.state_dict()['layers.lin_filter.weight'] = torch.tensor(weight_mat.T.to(device))
         else:
-            self.layer_filter =  nn.Sequential(OrderedDict([
-                "lin_filter",
-                nn.Linear(self.output_size, 1)
-            ])
+            weight_mat = torch.eye(self.output_size)
+            # Set specific channel to output
+            self.layers["lin_filter"] = nn.Linear(
+                            self.output_size, 
+                            self.output_size
+                            )
+            self.state_dict()['layers.lin_filter.weight'] = torch.tensor(weight_mat.T.to(device))
+        
+            #self.forward = lambda x: self.layers(x).matmul(weight_mat.to(device))  
+    
+    def create_layer_filters(self, device = 'cuda'):
+        for idx in range(self.output_size):    
+            self.layer_filters.append(
+                nn.Sequential(
+                    OrderedDict([
+                        (
+                        "lin_filter",
+                        nn.Linear(self.output_size, 1)
+                        )
+                    ])
+                )
             )
             weight_mat = torch.zeros((self.output_size, 1))
             weight_mat[idx, 0] = 1.
             # Set specific channel to output
-            self.state_dict()['layer_filter.lin_filter.weight'] = torch.tensor(weight_mat.T.to(device))
+            
+            self.state_dict()['layer_filter.lin_filter.weight'.format(idx)] = torch.tensor(weight_mat.T.clone())
+            print(self.state_dict().keys())
         #self.forward = lambda x: self.layers(x).matmul(weight_mat.to(device))      
         self.forward = lambda x: self.layer_filter(self.layer(x))
 
@@ -1244,17 +1262,17 @@ class AttitudeController(nn.Module):
                                 ACTIVS[layers[-1]]
                             )
                         )
-                """
+               
                 # To select which channel to output, by default the weight should be an identity matrix
                 layer_tuples.append(
                     (
-                        "lin{}".format(self.num_layers + 2), 
+                        "lin_filter".format(self.num_layers + 2), 
                         nn.Linear(
                             self.output_size, 
                             self.output_size)
                     )
                 )
-                """
+                
                 self.layers = nn.Sequential(OrderedDict(layer_tuples))
 
             for i_layer in range(len(self.layers)):
@@ -1266,15 +1284,13 @@ class AttitudeController(nn.Module):
                 
                 bias_mat = np.zeros((layer.out_features))
                  # Set default weights/bias for the last layer then break
-                """
+                
                 if i_layer == len(self.layers) - 1:
                     weight_mat = np.eye(self.output_size)
-                    self.state_dict()['layers.lin{}.weight'.format(i_layer)] = torch.tensor(weight_mat.T)
-                    self.state_dict()['layers.lin{}.bias'.format(i_layer)] = torch.tensor(bias_mat.T)
+                    self.state_dict()['layers.lin_filter.weight'.format(i_layer)] = torch.tensor(weight_mat.T)
+                    self.state_dict()['layers.lin_filter.bias'.format(i_layer)] = torch.tensor(bias_mat.T)
                     break
-                else:
-                    weight_mat = np.zeros((layer.in_features, layer.out_features))
-                """
+                
                 weight_mat = np.zeros((layer.in_features, layer.out_features))
                 offset = cnt
                 while cnt < offset + weight_mat.shape[0] * weight_mat.shape[1]:
