@@ -1117,8 +1117,8 @@ ACTIVS = {
     "Affine": None,
     }
 
-class NeuralNetwork(nn.Module):
-    def __init__(self, path = os.path.join(os.path.dirname(__file__), "./models/polar/attitudecontrol/CLF_controller_layer_num_3_new")):
+class AttitudeController(nn.Module):
+    def __init__(self, path = os.path.join(os.path.dirname(__file__), "models/polar/attitudecontrol/CLF_controller_layer_num_3_new")):
         super().__init__()
         self.path = path
         self.input_size = None
@@ -1126,7 +1126,10 @@ class NeuralNetwork(nn.Module):
         self.num_layers = None
         self.layers = None
         self.load_from_path(path)
-        
+    
+    def forward(self, x):
+        return self.layers(x)
+ 
          
     def load_from_path(self, path = None):
         if path is None:
@@ -1136,6 +1139,7 @@ class NeuralNetwork(nn.Module):
         weight_mat = None
         bias_mat = None
         with open(path, 'r') as f:
+            print(">>>>>>>>> Loading Attitude Controller from {}".format(path))
             line = f.readline().split('\n')[0] 
             if not line:
                 raise FileNotFoundError("No line in the file {}".format(path))
@@ -1246,12 +1250,11 @@ class NeuralNetwork(nn.Module):
                 self.state_dict()['layers.lin{}.bias'.format(i_layer)] = torch.tensor(bias_mat.T)
                 bias_mat = None
                 
-            print("Done")
+            print(">>>>>>>>>>>>>>Done loading Attitude Controller")
             line = f.readline().split('\n')[0] 
             while line:
-                print(line)
                 line = f.readline().split('\n')[0] 
-                
+            f.close()    
             
 if __name__ == "__main__":
-    nn = NeuralNetwork()
+    nn = AttitudeController()

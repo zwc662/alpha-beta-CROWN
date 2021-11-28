@@ -159,19 +159,7 @@ def main():
         print(f"epsilon after preprocession: {perturb_epsilon}, data_max = {data_max}, data_min = {data_min}")
 
     bnb_ids = list(range(X.shape[0]))
-
-    if arguments.Config["data"]["data_filter_path"] is not None:
-        df = pd.read_pickle(arguments.Config["data"]["data_filter_path"])
-        filtered_idx = df.index[df['need_attack'] == 1].tolist()
-        if 'mip_status' in df.columns:
-            mip_unsafe = df.index[df['mip_status'] == 2].tolist()
-            mip_unknown = df.index[df['mip_status'] == 3].tolist()
-            filtered_idx = list(set(filtered_idx) & set(mip_unknown + mip_unsafe))
-
-        bnb_ids = list(set(bnb_ids) & set(filtered_idx))
-        bnb_ids.sort()
-        print('After filtered inputs, we have {} inputs left in this model!'.format(len(bnb_ids)))
-
+ 
     bnb_ids = bnb_ids[arguments.Config["data"]["start"]:  arguments.Config["data"]["end"]]
     print('Task length:', len(bnb_ids))
 
@@ -228,23 +216,7 @@ def main():
         verified_status = "unknown"
         attack_margin = None
 
-        """
-        if arguments.Config["attack"]["pgd_order"] == "before":
-            start_attack = time.time()
-            if True:
-                attack_args = {'dataset': attack_dataset, 'model': model_ori, 'x': x, 'max_eps': perturb_eps, 'data_min': data_min, 'data_max': data_max, 'y': y}
-                attack_ret, attack_images, attack_margin = pgd_attack(**attack_args)
-            ret.append([imag_idx, 0, 0, time.time()-start_attack, new_idx, -3, np.inf, np.inf])
-            if attack_ret:
-                # Attack success.
-                verified_status = "unsafe-pgd"
-                verified_acc -= 1
-                attack_success.append(imag_idx)
-                print(f"Result: image {imag_idx} attack success!")
-                continue
         
-        # continue  # uncomment for checking pgd attacking results
-        """
         cnt += 1
         init_global_lb = saved_bounds = saved_slopes = None
 
@@ -313,16 +285,7 @@ def main():
             # attack_images shape: (1, batch, restarts, num_class-1, c, h, w)
             # select target label attack_images according to pidx. New shape (restarts, c, h, w).
             targeted_attack_images = None
-            """
-            if arguments.Config["attack"]["pgd_order"] == "before":
-                targeted_attack_images = attack_images[0, :, pidx if pidx < y else pidx - 1]
-                attack_args.update({'target': pidx, 'only_target_attack': True})
-                attack_args.update({'data_max': torch.min(x + perturb_eps, data_max)})
-                attack_args.update({'data_min': torch.max(x - perturb_eps, data_min)})
-                arguments.attack_args = attack_args
-            else:
-                arguments.attack_args = None
-            """
+ 
             try:
                 if arguments.Config["general"]["enable_incomplete_verification"]:
                     # Reuse results from incomplete results, or from refined MIPs.
