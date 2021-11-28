@@ -16,7 +16,7 @@ from bab_verification_general import mip, incomplete_verifier, bab
 
 
 from model_defs import AttitudeController
-model_ori = AttitudeController()
+
 
 def config_args():
     # Add arguments specific for this front-end.
@@ -61,9 +61,11 @@ def main():
         print('Only Linf-norm attack is supported, the pgd_order will be changed to skip')
         arguments.Config["attack"]["pgd_order"] = "skip"
 
+    model_ori = AttitudeController()
+    x_min = torch.tensor(arguments.Config["init"]["min"]).unsqueeze(0)
+    x_max = torch.tensor(arguments.Config["init"]["max"]).unsqueeze(0)
+    
     with torch.no_grad():
-        x_min = torch.tensor(arguments.Config["init"]["min"]).unsqueeze(0)
-        x_max = torch.tensor(arguments.Config["init"]["max"]).unsqueeze(0)
         model_ori, data_max, data_min = model_ori.to(arguments.Config["general"]["device"]), data_max.to(arguments.Config["general"]["device"]), data_min.to(arguments.Config["general"]["device"])
 
         x = (x_min + x_max)/2.
