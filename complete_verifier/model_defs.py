@@ -1136,12 +1136,12 @@ class AttitudeController(nn.Module):
             weight_mat = torch.zeros(self.output_size, 1)
             weight_mat[idx, 0] = 1.
             # Set specific channel to output
-            print(self.layers)
+            print(self.state_dict()['layers.lin_filter.weight'])
             self.layers[-1] = nn.Linear(
                             self.output_size, 
                             1
                             )
-            print(self.layers)
+            print(self.state_dict()['layers.lin_filter.weight'])
             self.state_dict()['layers.lin_filter.weight'] = weight_mat.T.to(device)
         else:
             weight_mat = torch.eye(self.output_size)
