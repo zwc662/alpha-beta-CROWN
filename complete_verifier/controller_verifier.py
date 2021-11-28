@@ -275,101 +275,6 @@ def main():
             print(f"Result: image {imag_idx} verification success (with incomplete verifier)!")
             continue
 
-        if arguments.Config["attack"]["pgd_order"] == "after":
-            print(">>>>>>>>>>>>>>> PGD attack: order = after")
-            start_attack = time.time()
-            if True:
-                attack_args = {'dataset': attack_dataset, 'model': model_ori, 'x': x, 'max_eps': perturb_eps, 'data_min': data_min, 'data_max': data_max, 'y': y}
-                attack_ret, attack_images, attack_margin = pgd_attack(**attack_args)
-            ret.append([imag_idx, 0, 0, time.time()-start_attack, new_idx, -3, np.inf, np.inf])
-            if attack_ret:
-                # Attack success.
-                verified_status = "unsafe-pgd"
-                verified_acc -= 1
-                cnt -= 1
-                attack_success.append(imag_idx)
-                print(f"Result: image {imag_idx} attack success!")
-                continue
-            elif arguments.Config["attack"]["enable_mip_attack"]:
-                c = torch.eye(arguments.Config["data"]["num_classes"]).type_as(data)[[y]].unsqueeze(1) - torch.eye(arguments.Config["data"]["num_classes"]).type_as(data).unsqueeze(0)
-                lirpa_model, lower_bounds, upper_bounds, masks = saved_bounds[:4]
-                lirpa_model.build_mip_model(lower_bounds, upper_bounds, arguments.Config["bab"]["timeout"], arguments.Config["solver"]["mip"]["parallel_solvers"], arguments.Config["solver"]["mip"]["solver_threads"])
-                total_unstable = 0
-                for layer_i, m in enumerate(masks):
-                    unstable = int(m.sum().item())
-                    total_unstable += unstable
-                    print(f'layer {layer_i} has {unstable} unstable neurons')
-                print(f'Total {total_unstable} unstable neurons.')
-
-                attack_ret = False
-                labels_to_verify = attack_margin.argsort().squeeze().tolist()
-                print('Sorted order for labels to attack:', labels_to_verify)
-                for target in labels_to_verify:
-                    if target != y:
-                        if init_global_lb[0][target].item() > 0:
-                            print(f'Label {target} is already verified.')
-                            continue
-                        attack_image_target = target if target < y else target - 1
-                        adv_pool = AdvExamplePool(lirpa_model.net, masks, C=c[:, target:target+1])
-                        # Add adversarial image for the specific target only.
-                        adv_pool.add_adv_images(attack_images[:, :, attack_image_target].view((-1, *attack_images.shape[-3:])))
-                        neuron_idx, coeff = adv_pool.get_activation_pattern_from_pool()
-                        # The initial starting point and activation pattern has a batch dimension because there can be multiple initializations.
-                        selected_advs = adv_pool.adv_pool
-                        best_adv = torch.stack([adv.x for adv in selected_advs], dim=0)
-                        best_adv_pattern = [torch.stack([adv.activation_pattern[layer_i] for adv in selected_advs], dim=0) for layer_i in range(adv_pool.nlayers)]
-                        print(f'Best adv example in pool: {adv_pool.adv_pool[0].obj}, worse {adv_pool.adv_pool[-1].obj}')
-                        print(f'Target label {target} has {len(coeff)} out of {total_unstable} unstable neurons fixed.')
-                        attack_ret, solver_results = lirpa_model.update_mip_model_fix_relu([neuron_idx], [coeff], target, arguments.Config["solver"]["mip"]["parallel_solvers"], arguments.Config["solver"]["mip"]["solver_threads"],
-                                async_mip=False, best_adv=[best_adv], adv_activation_pattern=[best_adv_pattern])
-                        with torch.no_grad():
-                            pred = lirpa_model.net(solver_results[0][3].to(lirpa_model.net.device)).squeeze(0)
-                            attack_margin = pred[y] - pred
-                            print(f"attack margin: {attack_margin}, for label {target}: {pred[y] - pred[target]}")
-                        if attack_ret:
-                            break
-                if attack_ret:
-                    # Attack success.
-                    verified_status = "unsafe-mip_attack"
-                    verified_acc -= 1
-                    attack_success.append(imag_idx)
-                    print(f"Result: image {imag_idx} attack success!")
-                    cnt -= 1
-                    continue
-
-        # MIP or MIP refined bounds.
-        if not verified_success and (arguments.Config["general"]["complete_verifier"] == "mip" or arguments.Config["general"]["complete_verifier"] == "bab-refine"):
-            print(">>>>>>>>>>>>>>> MIP or MIP refined bounds via complete_verifier: {}".format(arguments.Config["general"]["complete_verifier"]))
-            start_refine = time.time()
-            
-            ############# Execute mip verification
-            verified_status, init_global_lb, lower_bounds, upper_bounds = mip(saved_bounds=saved_bounds, y=y)
-            #############
-
-            verified_success = verified_status != "unknown"
-            if verified_status == "unknown-mip": 
-                verified_acc -= 1
-                mip_unknown.append(imag_idx)
-            elif verified_status == "unsafe-mip":
-                verified_acc -= 1
-                mip_unsafe.append(imag_idx)
-            elif verified_status == "safe-mip":
-                mip_safe.append(imag_idx)
-            arguments.Config["bab"]["timeout"] -= (time.time()-start_refine)
-            ret.append([imag_idx, 0, 0, time.time()-start_refine, new_idx, -2, np.inf, np.inf])
-            print("time threshold left for bab:", arguments.Config["bab"]["timeout"])
-
-        if verified_success:
-            print(f"Result: image {imag_idx} verification success (with mip intermediate bound)!")
-            continue
-        elif arguments.Config["general"]["complete_verifier"] == 'skip':
-            print(f"Result: image {imag_idx} verification failure (complete verifier skipped as requested).")
-            verified_acc -= 1
-            verified_failed.append(imag_idx)
-            continue
-        elif verified_status == "unknown-mip":
-            continue
-
         if arguments.Config["general"]["mode"] == "verified-acc":
             if arguments.Config["attack"]["pgd_order"] != "skip":
                 labels_to_verify = attack_margin.argsort().squeeze().tolist()
@@ -417,7 +322,6 @@ def main():
                     # Reuse results from incomplete results, or from refined MIPs.
                     # skip the prop that already verified
                     print(">>>>>>>>>>>>>>> Reuse results from incomplete results, or from refined MIPs. Skip the prop that already verified")
-                    exit(0)
                     rlb, rub = list(lower_bounds), list(upper_bounds)
                     rlb[-1] = rlb[-1][0, pidx]
                     rub[-1] = rub[-1][0, pidx]
@@ -438,7 +342,6 @@ def main():
                                            lower_bounds=lower_bounds, upper_bounds=upper_bounds, reference_slopes=saved_slopes, attack_images=targeted_attack_images)
                 else:
                     print(">>>>>>>>>>>>>>> Skipped incomplete verification, and refined MIPs. Run complete_verifier: {}".format(arguments.Config["general"]["complete_verifier"]))
-                    exit(0)
                     assert arguments.Config["general"]["complete_verifier"] == "bab"  # for MIP and BaB-Refine.
                     # Main function to run verification
 
