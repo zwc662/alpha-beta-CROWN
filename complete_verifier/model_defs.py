@@ -1130,9 +1130,12 @@ class AttitudeController(nn.Module):
     def forward(self, x):
         return self.layers(x)
     
-    def filter(self, idx):
-        weight_mat = np.zeros((self.output_size, self.output_size))
-        weight_mat[idx, idx] = 1.
+    def filter(self, idx = None):
+        if idx is not None:
+            weight_mat = np.eye(self.output_size)
+        else:
+            weight_mat = np.zeros((self.output_size, self.output_size))
+            weight_mat[idx, idx] = 1.
         # Set specific channel to output
         self.state_dict()['layers.lin{}.weight'.format(len(self.layers) - 1)] = torch.tensor(weight_mat.T)
             
