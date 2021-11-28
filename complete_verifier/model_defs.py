@@ -1138,7 +1138,7 @@ class AttitudeController(nn.Module):
         else:
             weight_mat = torch.eye(self.output_size)
             # Set specific channel to output
-        self.forward = lambda x: self.layers(x).matmul(torch.tensor(weight_mat).to(device).detach())  
+        self.forward = lambda x: self.layers(x).matmul(weight_mat.to(device)).detach()
     
     def create_layer_filters(self, device = 'cuda'):
         for idx in range(self.output_size):    
