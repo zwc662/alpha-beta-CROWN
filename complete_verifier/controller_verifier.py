@@ -247,6 +247,7 @@ def main():
         # Incomplete verification is enabled by default. The intermediate lower and upper bounds will be reused in bab and mip.
         if not verified_success and (arguments.Config["general"]["enable_incomplete_verification"] or arguments.Config["general"]["complete_verifier"] == "bab-refine"):
             print(">>>>>>>>>>>>>>>Incomplete verification is enabled by default. The intermediate lower and upper bounds will be reused in bab and mip.")
+            
             start_incomplete = time.time()
             data = x
             if arguments.Config["specification"]["norm"] == np.inf:
@@ -416,6 +417,7 @@ def main():
                     # Reuse results from incomplete results, or from refined MIPs.
                     # skip the prop that already verified
                     print(">>>>>>>>>>>>>>> Reuse results from incomplete results, or from refined MIPs. Skip the prop that already verified")
+                    exit(0)
                     rlb, rub = list(lower_bounds), list(upper_bounds)
                     rlb[-1] = rlb[-1][0, pidx]
                     rub[-1] = rub[-1][0, pidx]
@@ -436,6 +438,7 @@ def main():
                                            lower_bounds=lower_bounds, upper_bounds=upper_bounds, reference_slopes=saved_slopes, attack_images=targeted_attack_images)
                 else:
                     print(">>>>>>>>>>>>>>> Skipped incomplete verification, and refined MIPs. Run complete_verifier: {}".format(arguments.Config["general"]["complete_verifier"]))
+                    exit(0)
                     assert arguments.Config["general"]["complete_verifier"] == "bab"  # for MIP and BaB-Refine.
                     # Main function to run verification
 
