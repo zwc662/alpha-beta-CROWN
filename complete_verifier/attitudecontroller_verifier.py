@@ -96,20 +96,20 @@ def main():
 
     # Test run the initial control output given a medium state
     with torch.no_grad():
-        for i in range(5):
+        
             print("{}th test".format(i))
             u_pred = model_ori(x)
             print("Given medium input {}".format(x))
             print("Attitude controller's output {}".format(u_pred))
-        for idx in range(model_ori.output_size):
-            model_ori.filter(idx)
-            model_ori = model_ori.to(arguments.Config["general"]["device"])
-            u_pred = model_ori(x)
-            print("Attitude controller filtered {}th output {}".format(idx, u_pred))
-            model_ori.filter()
-            model_ori = model_ori.to(arguments.Config["general"]["device"])
-                
-        exit(0)
+            for idx in range(model_ori.output_size):
+                model_ori.filter(idx)
+                model_ori = model_ori.to(arguments.Config["general"]["device"])
+                u_pred = model_ori(x)
+                print("Attitude controller filtered {}th output {}".format(idx, u_pred))
+                model_ori.filter()
+                model_ori = model_ori.to(arguments.Config["general"]["device"])
+                    
+ 
     # Run step by step
     for step in step_ids:
         # Extract each range from the range list
@@ -139,7 +139,7 @@ def main():
                     print(verified_status, init_global_lb, saved_bounds)
                     lower_bounds, upper_bounds = saved_bounds[1], saved_bounds[2]
                     arguments.Config["bab"]["timeout"] -= (time.time()-start_incomplete)
-                    ret.append([step, idx, 0, 0, time.time()-start_incomplete, -1, np.inf, np.inf])
+                    ret.append([step, idx, cha, 0, 0, time.time()-start_incomplete, -1, np.inf, np.inf])
 
                 if arguments.Config["general"]["mode"] == "verified-acc":
                     if arguments.Config["general"]["enable_incomplete_verification"]:
@@ -162,7 +162,7 @@ def main():
                 for pidx in labels_to_verify:
                     if isinstance(pidx, torch.Tensor):
                         pidx = pidx.item()
-                    print('##### [Step {}: range {}] Tested against {} ######'.format(step, idx, pidx))
+                    print('##### [Step {}: input range {}, output channel {}] Tested against {} ######'.format(step, idx, cha, pidx))
                 torch.cuda.empty_cache()
                 gc.collect()
 
@@ -185,7 +185,7 @@ def main():
                             l, u, nodes, glb_record = rlb[-1].item(), float('inf'), 0, []
                         else:
                             if arguments.Config["bab"]["timeout"] < 0:
-                                print(f"Step {step} range {idx} verification failure (running out of time budget).")
+                                print(f"Step {step} input range {idx} output channel {cha} verification failure (running out of time budget).")
                                 l, u, nodes, glb_record = rlb[-1].item(), float('inf'), 0, []
                             else:
                                 # feed initialed bounds to save time
@@ -202,9 +202,9 @@ def main():
                         #################
 
                     time_cost = time.time() - start_inner
-                    print('Step {} range {} output channel {} verification end, final lower bound {}, upper bound {}, time: {}'.format(step, idx, pidx, l, u, time_cost))
+                    print('Step {} input range {} output channel {} test against {} verification end, final lower bound {}, upper bound {}, time: {}'.format(step, idx, cha, pidx, l, u, time_cost))
                     
-                    ret.append([step, idx , l, nodes, time_cost, pidx, u, np.inf])
+                    ret.append([step, idx , cha, l, nodes, time_cost, pidx, u, np.inf])
                     arguments.Config["bab"]["timeout"] -= time_cost
                     lb_record.append([glb_record])
                     np.save(save_path, np.array(ret))
@@ -220,17 +220,17 @@ def main():
                             break
 
                 except KeyboardInterrupt:
-                    print('Step {} range {} time {}:', step, idx, time.time()-start_inner, "\n",)
+                    print('Step {} input range {} output channel {} time {}:', step, idx, cha, time.time()-start_inner, "\n",)
                     print(ret)
                     pidx_all_verified = False
                     break
 
                 if not pidx_all_verified:
                     verified_acc -= 1
-                    verified_failed.append([step, idx])
-                    print(f'Result: Step {step} range {idx} verification failure (with branch and bound).')
+                    verified_failed.append([step, idx, cha])
+                    print(f'Result: Step {step} input range {idx} output channel {cha} verification failure (with branch and bound).')
                 else:
-                    print(f'Result: Step {step} range {idx} verification success (with branch and bound)!')
+                    print(f'Result: Step {step} input range {idx} output channel {cha} verification success (with branch and bound)!')
                 # Make sure ALL tensors used in this loop are deleted here.
                 del init_global_lb, saved_bounds, saved_slopes
     
