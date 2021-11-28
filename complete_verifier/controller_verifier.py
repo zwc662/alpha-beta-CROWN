@@ -225,7 +225,8 @@ def main():
         verified_success = False
         verified_status = "unknown"
         attack_margin = None
-
+        
+        """
         if arguments.Config["attack"]["pgd_order"] == "before":
             start_attack = time.time()
             if True:
@@ -239,11 +240,13 @@ def main():
                 attack_success.append(imag_idx)
                 print(f"Result: image {imag_idx} attack success!")
                 continue
+        """
         # continue  # uncomment for checking pgd attacking results
 
         cnt += 1
         init_global_lb = saved_bounds = saved_slopes = None
 
+        """
         # Incomplete verification is enabled by default. The intermediate lower and upper bounds will be reused in bab and mip.
         if not verified_success and (arguments.Config["general"]["enable_incomplete_verification"] or arguments.Config["general"]["complete_verifier"] == "bab-refine"):
             print(">>>>>>>>>>>>>>>Incomplete verification is enabled by default. The intermediate lower and upper bounds will be reused in bab and mip.")
@@ -270,7 +273,7 @@ def main():
                 lower_bounds, upper_bounds = saved_bounds[1], saved_bounds[2]
             arguments.Config["bab"]["timeout"] -= (time.time()-start_incomplete)
             ret.append([imag_idx, 0, 0, time.time()-start_incomplete, new_idx, -1, np.inf, np.inf])
-
+        """
         if verified_success:
             print(f"Result: image {imag_idx} verification success (with incomplete verifier)!")
             continue
@@ -381,7 +384,7 @@ def main():
             print(f'Result: image {imag_idx} verification success (with branch and bound)!')
         # Make sure ALL tensors used in this loop are deleted here.
         del init_global_lb, saved_bounds, saved_slopes
-
+    
     # some results analysis
     np.set_printoptions(suppress=True)
     ret = np.array(ret)
