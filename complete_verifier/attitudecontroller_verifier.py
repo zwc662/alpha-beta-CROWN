@@ -139,7 +139,10 @@ def main():
                 raise ValueError("unknown verification mode")
             
             pidx_all_verified = True
-            print("Summary: ", verified_status, init_global_lb, saved_bounds, labels_to_verify)
+            print("verified_status: ", verified_status)
+            print("init_global_lb: ", init_global_lb)
+            print("labels_to_verify: ", labels_to_verify)
+            print("saved bounds: ", saved_bounds)
             exit(0)
 
 if __name__ == "__main__":
