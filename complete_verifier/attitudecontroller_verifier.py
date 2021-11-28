@@ -191,6 +191,12 @@ def main():
                 time_cost = time.time() - start_inner
                 print('Step {} range {} output channel {} verification end, final lower bound {}, upper bound {}, time: {}'.format(step, idx, pidx, l, u, time_cost))
                 exit(0)
+                
+            except KeyboardInterrupt:
+                print('Step {} range {} time {}:', step, idx, time.time()-start_inner, "\n",)
+                print(ret)
+                pidx_all_verified = False
+                break
 
 if __name__ == "__main__":
     config_args()
