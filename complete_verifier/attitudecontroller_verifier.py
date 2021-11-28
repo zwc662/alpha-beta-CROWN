@@ -40,9 +40,32 @@ def config_args():
 
 
 def main():
+    print(f'Experiments at {time.ctime()} on {socket.gethostname()}')
+    torch.manual_seed(arguments.Config["general"]["seed"])
+    random.seed(arguments.Config["general"]["seed"])
+    np.random.seed(arguments.Config["general"]["seed"])
+    if arguments.Config["general"]["device"] != 'cpu':
+        torch.cuda.manual_seed_all(arguments.Config["general"]["seed"])
+        # Always disable TF32 (precision is too low for verification).
+        torch.backends.cuda.matmul.allow_tf32 = False
+        torch.backends.cudnn.allow_tf32 = False
+
+    if arguments.Config["general"]["deterministic"]:
+        os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
+        torch.use_deterministic_algorithms(True)
+
+    if arguments.Config["general"]["double_fp"]:
+        torch.set_default_dtype(torch.float64)
+
+    if arguments.Config["specification"]["norm"] != np.inf and arguments.Config["attack"]["pgd_order"] != "skip":
+        print('Only Linf-norm attack is supported, the pgd_order will be changed to skip')
+        arguments.Config["attack"]["pgd_order"] = "skip"
+
     with torch.no_grad():
         x_min = torch.tensor(arguments.Config["init"]["min"]).unsqueeze(0)
         x_max = torch.tensor(arguments.Config["init"]["max"]).unsqueeze(0)
+        model_ori, data_max, data_min = model_ori.to(arguments.Config["general"]["device"]), data_max.to(arguments.Config["general"]["device"]), data_min.to(arguments.Config["general"]["device"])
+
         x = (x_min + x_max)/2.
         perturb_eps = x - x_min
         u_pred = model_ori(x)
