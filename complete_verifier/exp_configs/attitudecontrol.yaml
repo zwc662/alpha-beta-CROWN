@@ -2,8 +2,6 @@
 general:
   mode: verified-acc  # Compute verified accuracy.
   #enable_incomplete_verification: False
-data:
-  num_class: 1
 init:
   min: [-0.45, -0.55, 0.65, -0.75, 0.85, -0.65]
   max: [-0.44, -0.54, 0.66, -0.74, 0.86, -0.64]
