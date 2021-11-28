@@ -1136,6 +1136,7 @@ class AttitudeController(nn.Module):
             weight_mat = torch.zeros(self.output_size, 1)
             weight_mat[idx, 0] = 1.
             # Set specific channel to output
+            print(self.layers[-1])
             self.layers[-1] = nn.Linear(
                             self.output_size, 
                             1
