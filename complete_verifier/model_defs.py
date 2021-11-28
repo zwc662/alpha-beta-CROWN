@@ -1131,16 +1131,19 @@ class AttitudeController(nn.Module):
         return self.layers(x)
     
     def filter(self, idx = None):
-        if idx is not None:
+        if idx is None:
             self.layers[-1] =  nn.Linear(self.output_size, self.output_size)
             weight_mat = np.eye(self.output_size)
+            # Set specific channel to output
+            self.state_dict()['layers.lin{}.weight'.format(len(self.layers) - 1)] = torch.tensor(weight_mat.T)
+              
         else:
             self.layers[-1] =  nn.Linear(self.output_size, 1)
             weight_mat = np.zeros((self.output_size, 1))
             weight_mat[idx, 0] = 1.
-        # Set specific channel to output
-        self.state_dict()['layers.lin{}.weight'.format(len(self.layers) - 1)] = torch.tensor(weight_mat.T)
-            
+            # Set specific channel to output
+            self.state_dict()['layers.lin{}.weight'.format(len(self.layers) - 1)] = torch.tensor(weight_mat.T)
+                
          
     def load_from_path(self, path = None):
         if path is None:
