@@ -83,32 +83,19 @@ def main():
     init_global_lb = saved_bounds = saved_slopes = None
 
     # Load model
-    model_ori = AttitudeController()
+    model_ori = AttitudeController().to(arguments.Config["general"]["device"])
 
     # The initial state min, max as a single range are loaded into a list
-    x_min = torch.tensor(arguments.Config["init"]["min"]).unsqueeze(0)
-    x_max = torch.tensor(arguments.Config["init"]["max"]).unsqueeze(0)
- 
- 
-    X_min = [x_min]
-    X_max = [x_max]
+    x_min = torch.tensor(arguments.Config["init"]["min"]).unsqueeze(0).to(arguments.Config["general"]["device"])
+    x_max = torch.tensor(arguments.Config["init"]["max"]).unsqueeze(0).to(arguments.Config["general"]["device"])
+    x = (x_max + x_min)/2.
+    perturb_eps = x - x_min
 
-    # Initialize an empty list of control output ranges
-    U_min = []
-    U_max = []
-
-    # Initialze an empty list of next state ranges
-    X_nxt = []
-    X_min_nxt = []
-    X_max_nxt = []
-
-   
+    # Initialize lists of current and next state ranges and control output ranges 
+    X_min, X_max, U_min, U_max, X_nxt, X_min_nxt, X_max_nxt = [x_min], [x_max], [], [], [], [], []
 
     # Test run the initial control output given a medium state
     with torch.no_grad():
-        model_ori, x_max, x_min = model_ori.to(arguments.Config["general"]["device"]), x_max.to(arguments.Config["general"]["device"]), x_min.to(arguments.Config["general"]["device"])
-        x = (x_max + x_min)/2.
-        perturb_eps = x - x_min
         u_pred = model_ori(x)
         print("Given medium input {}".format(x))
         print("Attitude controller's output {}".format(u_pred))
@@ -152,6 +139,7 @@ def main():
                 raise ValueError("unknown verification mode")
             
             pidx_all_verified = True
+            print(verified_status, init_global_lb, saved_bounds, labels_to_verify)
 
 
 if __name__ == "__main__":
