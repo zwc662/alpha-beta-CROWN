@@ -264,8 +264,7 @@ def main():
                     data_lb = torch.max(data - perturb_eps, data_min)
             else:
                 data_ub = data_lb = data
-            print(data.shape, data_ub.shape, data_lb.shape)
-            exit(0)
+
             ############ incomplete_verification execution
             verified_status, init_global_lb, saved_bounds, saved_slopes = incomplete_verifier(model_ori, x, arguments.Config["specification"]["norm"],
                         y, data_ub=data_ub, data_lb=data_lb, eps=perturb_eps)
