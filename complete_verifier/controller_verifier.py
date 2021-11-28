@@ -78,6 +78,8 @@ def get_statistics(model, xs, true_label, eps, data_min, data_max, batch_size, m
     assert N % batch_size == 0 # natural number of batches
     batches = int(N/batch_size) # number of batches
     num_class = arguments.Config["data"]["num_classes"] # number of classes (for controller it is the number of output channels)
+    print(num_class)
+    exit(0)
     norm = np.inf # infi-norm
     model = BoundedModule(model, torch.empty_like(xs[:batch_size]), bound_opts={'optimize_bound_args': {'ob_verbose': 0, 'ob_init': True, 'ob_lr': 0.1}}, device='cuda')
     # bound the output of the model
@@ -147,8 +149,6 @@ def main():
 
     X, labels, runnerup, data_max, data_min, perturb_epsilon, target_label = load_verification_dataset(perturb_epsilon)
     
-    print(X.shape, labels.shape)
-    exit(0)
     if "MNIST" in arguments.Config["data"]["dataset"]:
         attack_dataset = "MNIST"
     elif "CIFAR" in arguments.Config["data"]["dataset"]:
