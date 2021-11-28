@@ -1291,7 +1291,7 @@ class AttitudeController(nn.Module):
                     weight_mat = np.eye(self.output_size)
                     print(torch.tensor(weight_mat.T))
                     self.state_dict()['layers.lin_filter.weight'.format(i_layer)] = torch.tensor(weight_mat.T)
-                    print(self.state_dict()['layers.lin_filter.weight'])
+                    print(self.state_dict()['layers.lin_filter.weight'.format(i_layer)])
                     self.state_dict()['layers.lin_filter.bias'.format(i_layer)] = torch.tensor(bias_mat.T)
                     break
                 
