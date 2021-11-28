@@ -1132,10 +1132,23 @@ class AttitudeController(nn.Module):
     
     def filter(self, idx = None):
         if idx is not None:
+            self.layer[-1] = (
+                "lin{}".format(len(self.layers) - 1)), 
+                nn.Linear(
+                    self.output_size, 
+                    self.output_size)
+            )
             weight_mat = np.eye(self.output_size)
         else:
-            weight_mat = np.zeros((self.output_size, self.output_size))
-            weight_mat[idx, idx] = 1.
+            self.layer[-1] = (
+                "lin{}".format(len(self.layers) - 1)), 
+                nn.Linear(
+                    self.output_size, 
+                    1)
+            )
+            
+            weight_mat = np.zeros((self.output_size, 1))
+            weight_mat[idx, 0] = 1.
         # Set specific channel to output
         self.state_dict()['layers.lin{}.weight'.format(len(self.layers) - 1)] = torch.tensor(weight_mat.T)
             
@@ -1229,7 +1242,7 @@ class AttitudeController(nn.Module):
                                 ACTIVS[layers[-1]]
                             )
                         )
-
+               
                 # To select which channel to output, by default the weight should be an identity matrix
                 layer_tuples.append(
                     (
@@ -1239,7 +1252,7 @@ class AttitudeController(nn.Module):
                             self.output_size)
                     )
                 )
-
+              
                 self.layers = nn.Sequential(OrderedDict(layer_tuples))
 
             for i_layer in range(len(self.layers)):
@@ -1251,6 +1264,7 @@ class AttitudeController(nn.Module):
                 
                 bias_mat = np.zeros((layer.out_features))
                  # Set default weights/bias for the last layer then break
+                
                 if i_layer == len(self.layers) - 1:
                     weight_mat = np.eye(self.output_size)
                     self.state_dict()['layers.lin{}.weight'.format(i_layer)] = torch.tensor(weight_mat.T)
@@ -1258,7 +1272,8 @@ class AttitudeController(nn.Module):
                     break
                 else:
                     weight_mat = np.zeros((layer.in_features, layer.out_features))
-
+                 
+                weight_mat = np.zeros((layer.in_features, layer.out_features))
                 offset = cnt
                 while cnt < offset + weight_mat.shape[0] * weight_mat.shape[1]:
                     line = f.readline().split('\n')[0] 
