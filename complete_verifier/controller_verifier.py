@@ -146,7 +146,8 @@ def main():
         perturb_epsilon = None
 
     X, labels, runnerup, data_max, data_min, perturb_epsilon, target_label = load_verification_dataset(perturb_epsilon)
-    print(labels.shape)
+    
+    print(X.shape, labels.shape)
     exit(0)
     if "MNIST" in arguments.Config["data"]["dataset"]:
         attack_dataset = "MNIST"
