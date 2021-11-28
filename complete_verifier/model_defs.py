@@ -1125,6 +1125,7 @@ class AttitudeController(nn.Module):
         self.output_size = None
         self.num_layers = None
         self.layers = None
+        self.layer_filter = None
         self.load_from_path(path)
     
     def forward(self, x):
@@ -1132,19 +1133,28 @@ class AttitudeController(nn.Module):
     
     def filter(self, idx = None, device = 'cuda'):
         if idx is None:
-            #self.layers[-1] =  nn.Linear(self.output_size, self.output_size)
+            self.layer_filter =  nn.Sequential(OrderedDict([
+                "lin_filter",
+                nn.Linear(self.output_size, self.output_size)
+            ])
+            )
             weight_mat = torch.eye(self.output_size) 
             # Set specific channel to output
-            #self.state_dict()['layers.lin{}.weight'.format(len(self.layers) - 1)] = torch.tensor(weight_mat.T)
-            self.forward = lambda x: self.layers(x).matmul(weight_mat.to(device))  
+            self.state_dict()['layer_filter.lin_filter.weight'] = torch.tensor(weight_mat.T.to(device))
+            #self.forward = lambda x: self.layers(x).matmul(weight_mat.to(device))  
         else:
-            #self.layers[-1] =  nn.Linear(self.output_size, 1)
+            self.layer_filter =  nn.Sequential(OrderedDict([
+                "lin_filter",
+                nn.Linear(self.output_size, 1)
+            ])
+            )
             weight_mat = torch.zeros((self.output_size, 1))
             weight_mat[idx, 0] = 1.
             # Set specific channel to output
-            #self.state_dict()['layers.lin{}.weight'.format(len(self.layers) - 1)] = torch.tensor(weight_mat.T)
-            self.forward = lambda x: self.layers(x).matmul(weight_mat.to(device))      
-         
+        self.state_dict()['layer_filter.lin_filter.weight'] = torch.tensor(weight_mat.T.to(device))
+        #self.forward = lambda x: self.layers(x).matmul(weight_mat.to(device))      
+        self.forward = lambda x: self.layer_filter(self.layer(x))
+        
     def load_from_path(self, path = None):
         if path is None:
             path = self.path
