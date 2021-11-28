@@ -31,7 +31,7 @@ def config_args():
     
     h = ["model"]
     arguments.Config.add_argument("--model", type=str, default="please_specify_model_name", help='Name of model. Model must be defined in the load_verification_dataset() function in utils.py.', hierarchy=h + ["name"])
-    
+
     h = ["init"]
     arguments.Config.add_argument("--min", nargs='+', type=float, default=[-0.45, -0.55, 0.65, -0.75, 0.85, -0.65], help='Min initial input vector.', hierarchy=h + ["min"])
     arguments.Config.add_argument("--max", nargs='+', type=float, default=[-0.44, -0.54, 0.66, -0.74, 0.86, -0.64], help='Max initial input vector.', hierarchy=h + ["max"])
@@ -99,7 +99,7 @@ def main():
 
     # Test run the initial control output given a medium state
     with torch.no_grad():
-        model_ori, x_max, x_min = model_ori.to(arguments.Config["general"]["device"]), x_max.to(arguments.Config["general"]["device"]), x_min.to(arguments.Config["general"]["device"])
+        model_ori, x, x_max, x_min = model_ori.to(arguments.Config["general"]["device"]), x.to(arguments.Config["general"]["device"]), x_max.to(arguments.Config["general"]["device"]), x_min.to(arguments.Config["general"]["device"])
         perturb_eps = x - x_min
         u_pred = model_ori(x)
         print("Given medium input {}".format(u_pred))
