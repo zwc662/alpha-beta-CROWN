@@ -78,8 +78,7 @@ def get_statistics(model, xs, true_label, eps, data_min, data_max, batch_size, m
     assert N % batch_size == 0 # natural number of batches
     batches = int(N/batch_size) # number of batches
     num_class = arguments.Config["data"]["num_classes"] # number of classes (for controller it is the number of output channels)
-    print(num_class)
-    exit(0)
+ 
     norm = np.inf # infi-norm
     model = BoundedModule(model, torch.empty_like(xs[:batch_size]), bound_opts={'optimize_bound_args': {'ob_verbose': 0, 'ob_init': True, 'ob_lr': 0.1}}, device='cuda')
     # bound the output of the model
@@ -207,6 +206,8 @@ def main():
         x = x.unsqueeze(0).to(dtype=torch.get_default_dtype(), device=arguments.Config["general"]["device"])
         # first check the model is correct at the input
         logit_pred = model_ori(x)[0]
+        print(logit_pred.shape)
+        exit(0)
         y_pred = torch.max(logit_pred, 0)[1].item()
 
         if type(perturb_epsilon) is list:
