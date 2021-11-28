@@ -66,7 +66,7 @@ def main():
     x_max = torch.tensor(arguments.Config["init"]["max"]).unsqueeze(0)
     
     with torch.no_grad():
-        model_ori, data_max, data_min = model_ori.to(arguments.Config["general"]["device"]), data_max.to(arguments.Config["general"]["device"]), data_min.to(arguments.Config["general"]["device"])
+        model_ori, x_max, x_min = model_ori.to(arguments.Config["general"]["device"]), x_max.to(arguments.Config["general"]["device"]), x_min.to(arguments.Config["general"]["device"])
 
         x = (x_min + x_max)/2.
         perturb_eps = x - x_min
