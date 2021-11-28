@@ -246,7 +246,7 @@ def main():
 
         # Incomplete verification is enabled by default. The intermediate lower and upper bounds will be reused in bab and mip.
         if not verified_success and (arguments.Config["general"]["enable_incomplete_verification"] or arguments.Config["general"]["complete_verifier"] == "bab-refine"):
-            print("Incomplete verification is enabled by default. The intermediate lower and upper bounds will be reused in bab and mip.")
+            print(">>>>>>>>>>>>>>>Incomplete verification is enabled by default. The intermediate lower and upper bounds will be reused in bab and mip.")
             start_incomplete = time.time()
             data = x
             if arguments.Config["specification"]["norm"] == np.inf:
@@ -275,7 +275,7 @@ def main():
             continue
 
         if arguments.Config["attack"]["pgd_order"] == "after":
-            print("PGD attack: order = after")
+            print(">>>>>>>>>>>>>>> PGD attack: order = after")
             start_attack = time.time()
             if True:
                 attack_args = {'dataset': attack_dataset, 'model': model_ori, 'x': x, 'max_eps': perturb_eps, 'data_min': data_min, 'data_max': data_max, 'y': y}
@@ -338,7 +338,7 @@ def main():
 
         # MIP or MIP refined bounds.
         if not verified_success and (arguments.Config["general"]["complete_verifier"] == "mip" or arguments.Config["general"]["complete_verifier"] == "bab-refine"):
-            print("MIP or MIP refined bounds via complete_verifier: {}".format(arguments.Config["general"]["complete_verifier"]))
+            print(">>>>>>>>>>>>>>> MIP or MIP refined bounds via complete_verifier: {}".format(arguments.Config["general"]["complete_verifier"]))
             start_refine = time.time()
             
             ############# Execute mip verification
@@ -415,7 +415,7 @@ def main():
                 if arguments.Config["general"]["enable_incomplete_verification"]:
                     # Reuse results from incomplete results, or from refined MIPs.
                     # skip the prop that already verified
-                    print("Reuse results from incomplete results, or from refined MIPs. Skip the prop that already verified")
+                    print(">>>>>>>>>>>>>>> Reuse results from incomplete results, or from refined MIPs. Skip the prop that already verified")
                     rlb, rub = list(lower_bounds), list(upper_bounds)
                     rlb[-1] = rlb[-1][0, pidx]
                     rub[-1] = rub[-1][0, pidx]
@@ -435,7 +435,7 @@ def main():
                             l, u, nodes, glb_record = bab(model_ori, x, pidx, arguments.Config["specification"]["norm"], y=y, eps=perturb_eps, data_ub=data_max, data_lb=data_min,
                                            lower_bounds=lower_bounds, upper_bounds=upper_bounds, reference_slopes=saved_slopes, attack_images=targeted_attack_images)
                 else:
-                    print("Skipped incomplete verification, and refined MIPs. Run complete_verifier: {}".format(arguments.Config["general"]["complete_verifier"]))
+                    print(">>>>>>>>>>>>>>> Skipped incomplete verification, and refined MIPs. Run complete_verifier: {}".format(arguments.Config["general"]["complete_verifier"]))
                     assert arguments.Config["general"]["complete_verifier"] == "bab"  # for MIP and BaB-Refine.
                     # Main function to run verification
 
