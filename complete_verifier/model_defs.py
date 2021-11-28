@@ -1130,16 +1130,16 @@ class AttitudeController(nn.Module):
     def forward(self, x):
         return self.layers(x)
     
-    def filter(self, idx = None):
+    def filter(self, idx = None, device = 'cuda'):
         if idx is None:
             #self.layers[-1] =  nn.Linear(self.output_size, self.output_size)
-            weight_mat = torch.eye(self.output_size)
+            weight_mat = torch.eye(self.output_size).to(device)
             # Set specific channel to output
             #self.state_dict()['layers.lin{}.weight'.format(len(self.layers) - 1)] = torch.tensor(weight_mat.T)
             self.forward = lambda x: self.layers(x).matmul(weight_mat)  
         else:
             #self.layers[-1] =  nn.Linear(self.output_size, 1)
-            weight_mat = torch.zeros((self.output_size, 1))
+            weight_mat = torch.zeros((self.output_size, 1)).to(device)
             weight_mat[idx, 0] = 1.
             # Set specific channel to output
             #self.state_dict()['layers.lin{}.weight'.format(len(self.layers) - 1)] = torch.tensor(weight_mat.T)
