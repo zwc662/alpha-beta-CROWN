@@ -28,7 +28,10 @@ def config_args():
     arguments.Config.add_argument('--no_incomplete', action='store_false', dest='incomplete',
             help='Enable/Disable initial alpha-CROWN incomplete verification (this can save GPU memory when disabled).', hierarchy=h + ["enable_incomplete_verification"])
     arguments.Config.add_argument("--crown", action='store_true', help='Compute CROWN verified accuracy before verification (not used).', hierarchy=h + ["get_crown_verified_acc"])
- 
+    
+    h = ["model"]
+    arguments.Config.add_argument("--model", type=str, default="please_specify_model_name", help='Name of model. Model must be defined in the load_verification_dataset() function in utils.py.', hierarchy=h + ["name"])
+    
     h = ["init"]
     arguments.Config.add_argument("--min", nargs='+', type=float, default=[-0.45, -0.55, 0.65, -0.75, 0.85, -0.65], help='Min initial input vector.', hierarchy=h + ["min"])
     arguments.Config.add_argument("--max", nargs='+', type=float, default=[-0.44, -0.54, 0.66, -0.74, 0.86, -0.64], help='Max initial input vector.', hierarchy=h + ["max"])
