@@ -88,7 +88,7 @@ def main():
     # The initial state min, max as a single range are loaded into a list
     x_min = torch.tensor(arguments.Config["init"]["min"]).unsqueeze(0)
     x_max = torch.tensor(arguments.Config["init"]["max"]).unsqueeze(0)
-    print(x_min, x_max)
+ 
  
     X_min = [x_min]
     X_max = [x_max]
