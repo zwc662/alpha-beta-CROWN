@@ -1151,10 +1151,10 @@ class AttitudeController(nn.Module):
             weight_mat = torch.zeros((self.output_size, 1))
             weight_mat[idx, 0] = 1.
             # Set specific channel to output
-        self.state_dict()['layer_filter.lin_filter.weight'] = torch.tensor(weight_mat.T.to(device))
+            self.state_dict()['layer_filter.lin_filter.weight'] = torch.tensor(weight_mat.T.to(device))
         #self.forward = lambda x: self.layers(x).matmul(weight_mat.to(device))      
         self.forward = lambda x: self.layer_filter(self.layer(x))
-        
+
     def load_from_path(self, path = None):
         if path is None:
             path = self.path
