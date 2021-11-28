@@ -85,63 +85,72 @@ def main():
     # Load model
     model_ori = AttitudeController()
 
-    # Load initial state min, max and medium into a list
+    # The initial state min, max as a single range are loaded into a list
     x_min = torch.tensor(arguments.Config["init"]["min"]).unsqueeze(0)
     x_max = torch.tensor(arguments.Config["init"]["max"]).unsqueeze(0)
-    x = (x_min + x_max)/2.
-    
-    X = [x]
+ 
     X_min = [x_min]
     X_max = [x_max]
 
+    # Initialize an empty list of control output ranges
     U_min = []
     U_max = []
 
+    # Initialze an empty list of next state ranges
+    X_nxt = []
+    X_min_nxt = []
+    X_max_nxt = []
+
+   
+
     # Test run the initial control output given a medium state
     with torch.no_grad():
-        model_ori, x, x_max, x_min = model_ori.to(arguments.Config["general"]["device"]), x.to(arguments.Config["general"]["device"]), x_max.to(arguments.Config["general"]["device"]), x_min.to(arguments.Config["general"]["device"])
+        model_ori, x_max, x_min = model_ori.to(arguments.Config["general"]["device"]), x_max.to(arguments.Config["general"]["device"]), x_min.to(arguments.Config["general"]["device"])
+        x = (x_max + x_min)/2.
         perturb_eps = x - x_min
         u_pred = model_ori(x)
         print("Given medium input {}".format(u_pred))
         print("Attitude controller's output {}".format(u_pred))
 
     # Run step by step
-    for idx in enumerate(bnb_ids):
-        x = X[idx]
-        data_max = X_max[idx]
-        data_min = X_min[idx]
+    for step in bnb_ids:
+        # Extract each range from the range list
+        for idx in range(len(X_max)):
+            x_max = X_max[idx]
+            x_min = X_min[idx]
+            x = (x_max + x_min)/2.
 
-        if arguments.Config["general"]["enable_incomplete_verification"] or arguments.Config["general"]["complete_verifier"] == "bab-refine":
-            print(">>>>>>>>>>>>>>>Incomplete verification is enabled by default. The intermediate lower and upper bounds will be reused in bab and mip.")
-            start_incomplete = time.time()
-             
-            data = x
-            data_ub = data_max
-            data_lb = data_min
+            if arguments.Config["general"]["enable_incomplete_verification"] or arguments.Config["general"]["complete_verifier"] == "bab-refine":
+                print(">>>>>>>>>>>>>>>Incomplete verification is enabled by default. The intermediate lower and upper bounds will be reused in bab and mip.")
+                start_incomplete = time.time()
+                
+                data = x
+                data_ub = x_max
+                data_lb = x_min
 
-            ############ incomplete_verification execution
-            verified_status, init_global_lb, saved_bounds, saved_slopes = incomplete_verifier(
-                model_ori = model_ori, data = data, 
-                norm = arguments.Config["specification"]["norm"], \
-                y = None, data_ub=data_ub, data_lb=data_lb, eps=0.)
-            ############
-            print(verified_status, init_global_lb, saved_bounds)
-            lower_bounds, upper_bounds = saved_bounds[1], saved_bounds[2]
-            arguments.Config["bab"]["timeout"] -= (time.time()-start_incomplete)
-            ret.append([idx, 0, 0, time.time()-start_incomplete, idx, -1, np.inf, np.inf])
+                ############ incomplete_verification execution
+                verified_status, init_global_lb, saved_bounds, saved_slopes = incomplete_verifier(
+                    model_ori = model_ori, data = data, 
+                    norm = arguments.Config["specification"]["norm"], \
+                    y = None, data_ub=data_ub, data_lb=data_lb, eps=0.)
+                ############
+                print(verified_status, init_global_lb, saved_bounds)
+                lower_bounds, upper_bounds = saved_bounds[1], saved_bounds[2]
+                arguments.Config["bab"]["timeout"] -= (time.time()-start_incomplete)
+                ret.append([idx, 0, 0, time.time()-start_incomplete, idx, -1, np.inf, np.inf])
 
-        if arguments.Config["general"]["mode"] == "verified-acc":
-            if arguments.Config["general"]["enable_incomplete_verification"]:
-                # We have initial incomplete bounds.
-                labels_to_verify = init_global_lb.argsort().squeeze().tolist()
+            if arguments.Config["general"]["mode"] == "verified-acc":
+                if arguments.Config["general"]["enable_incomplete_verification"]:
+                    # We have initial incomplete bounds.
+                    labels_to_verify = init_global_lb.argsort().squeeze().tolist()
+                else:
+                    labels_to_verify = list(range(arguments.Config["data"]["num_classes"]))
+            elif arguments.Config["general"]["mode"] == "runnerup":
+                labels_to_verify = [u_pred.argsort(descending=True)[1]]
             else:
-                labels_to_verify = list(range(arguments.Config["data"]["num_classes"]))
-        elif arguments.Config["general"]["mode"] == "runnerup":
-            labels_to_verify = [u_pred.argsort(descending=True)[1]]
-        else:
-            raise ValueError("unknown verification mode")
-        
-        pidx_all_verified = True
+                raise ValueError("unknown verification mode")
+            
+            pidx_all_verified = True
 
 
 if __name__ == "__main__":
