@@ -107,6 +107,8 @@ def main():
                 u_pred = model_ori(x)
                 print("Attitude controller filtered {}th output {}".format(idx, u_pred))
             model_ori.filter()
+            model_ori = model_ori.to(arguments.Config["general"]["device"])
+                
         exit(0)
     # Run step by step
     for step in step_ids:
