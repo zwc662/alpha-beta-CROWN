@@ -71,12 +71,12 @@ def main():
                arguments.Config["bab"]["branching"]["candidates"], arguments.Config["solver"]["alpha-crown"]["lr_alpha"], arguments.Config["solver"]["beta-crown"]["lr_alpha"], arguments.Config["solver"]["beta-crown"]["lr_beta"], arguments.Config["attack"]["pgd_order"])
     print(f'saving results to {save_path}')
  
-    bnb_ids = range(arguments.Config["data"]["start"],  arguments.Config["data"]["end"])
+    step_ids = range(arguments.Config["data"]["start"],  arguments.Config["data"]["end"])
     ret, lb_record, attack_success = [], [], []
     mip_unsafe, mip_safe, mip_unknown = [], [], []
-    verified_acc = len(bnb_ids)
+    verified_acc = len(step_ids)
     verified_failed = []
-    nat_acc = len(bnb_ids)
+    nat_acc = len(step_ids)
     cnt = 0
     orig_timeout = arguments.Config["bab"]["timeout"]
 
@@ -101,7 +101,7 @@ def main():
         print("Attitude controller's output {}".format(u_pred))
 
     # Run step by step
-    for step in bnb_ids:
+    for step in step_ids:
         # Extract each range from the range list
         for idx in range(len(X_max)):
             data_max = X_max[idx]
@@ -126,7 +126,7 @@ def main():
                 print(verified_status, init_global_lb, saved_bounds)
                 lower_bounds, upper_bounds = saved_bounds[1], saved_bounds[2]
                 arguments.Config["bab"]["timeout"] -= (time.time()-start_incomplete)
-                ret.append([idx, 0, 0, time.time()-start_incomplete, idx, -1, np.inf, np.inf])
+                ret.append([step, idx, 0, 0, time.time()-start_incomplete, -1, np.inf, np.inf])
 
             if arguments.Config["general"]["mode"] == "verified-acc":
                 if arguments.Config["general"]["enable_incomplete_verification"]:
@@ -190,13 +190,51 @@ def main():
 
                 time_cost = time.time() - start_inner
                 print('Step {} range {} output channel {} verification end, final lower bound {}, upper bound {}, time: {}'.format(step, idx, pidx, l, u, time_cost))
-                exit(0)
                 
+                ret.append([step, idx , l, nodes, time_cost, pidx, u, np.inf])
+                arguments.Config["bab"]["timeout"] -= time_cost
+                lb_record.append([glb_record])
+                np.save(save_path, np.array(ret))
+
+                if u < arguments.Config["bab"]["decision_thresh"]:
+                    verified_status = "unsafe-bab"
+                    verified_acc -= 1
+                    break
+                elif l < arguments.Config["bab"]["decision_thresh"]:
+                    if not arguments.Config["bab"]["attack"]["enabled"]:
+                        pidx_all_verified = False
+                        # break to run next sample save time if any label is not verified.
+                        break
+
             except KeyboardInterrupt:
                 print('Step {} range {} time {}:', step, idx, time.time()-start_inner, "\n",)
                 print(ret)
                 pidx_all_verified = False
                 break
+
+            if not pidx_all_verified:
+                verified_acc -= 1
+                verified_failed.append([step, idx])
+                print(f'Result: Step {step} range {idx} verification failure (with branch and bound).')
+            else:
+                print(f'Result: Step {step} range {idx} verification success (with branch and bound)!')
+            # Make sure ALL tensors used in this loop are deleted here.
+            del init_global_lb, saved_bounds, saved_slopes
+    
+    # some results analysis
+    np.set_printoptions(suppress=True)
+    ret = np.array(ret)
+    print(ret)
+
+    print("final verified acc: {}%[{}]".format(verified_acc/len(step_ids)*100., len(step_ids)))
+    np.save('Verified-acc_{}_start{}_end{}_{}_branching_{}.npy'.
+                    format(arguments.Config['model']['name'],  arguments.Config["data"]["start"],  arguments.Config["data"]["end"], verified_acc, arguments.Config["bab"]["branching"]["method"]), np.array(verified_failed))
+
+    print("Total verification count:", cnt, "total verified:", verified_acc)
+    if ret.size > 0:
+        # print("mean time [total:{}]: {}".format(len(step_ids), ret[:, 3].sum()/float(len(step_ids))))
+        print("mean time [cnt:{}] (excluding attack success): {}".format(cnt, ret[:, 4].sum()/float(cnt)))
+         
 
 if __name__ == "__main__":
     config_args()

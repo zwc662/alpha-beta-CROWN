@@ -321,7 +321,7 @@ def main():
 
                 time_cost = time.time() - start_inner
                 print('Image {} label {} verification end, final lower bound {}, upper bound {}, time: {}'.format(imag_idx, pidx, l, u, time_cost))
-                exit(0)
+                
                 ret.append([imag_idx, l, nodes, time_cost, new_idx, pidx, u, attack_margin[pidx] if attack_margin is not None else np.inf])
                 arguments.Config["bab"]["timeout"] -= time_cost
                 lb_record.append([glb_record])
