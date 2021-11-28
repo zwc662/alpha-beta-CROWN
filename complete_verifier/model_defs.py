@@ -1319,6 +1319,7 @@ class AttitudeController(nn.Module):
             while line:
                 line = f.readline().split('\n')[0] 
             f.close()    
+            print(self.state_dict()['layers.lin_filter.weight'])
             
 if __name__ == "__main__":
     nn = AttitudeController()
