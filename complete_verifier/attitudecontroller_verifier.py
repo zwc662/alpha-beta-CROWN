@@ -140,7 +140,7 @@ def main():
             
             pidx_all_verified = True
             print("Summary: ", verified_status, init_global_lb, saved_bounds, labels_to_verify)
-
+            exit(0)
 
 if __name__ == "__main__":
     config_args()
