@@ -1132,7 +1132,7 @@ class AttitudeController(nn.Module):
     
     def filter(self, idx = None):
         if idx is not None:
-            self.layer[-1] = (
+            self.layers[-1] = (
                 "lin{}".format(len(self.layers) - 1), 
                 nn.Linear(
                     self.output_size, 
@@ -1140,7 +1140,7 @@ class AttitudeController(nn.Module):
             )
             weight_mat = np.eye(self.output_size)
         else:
-            self.layer[-1] = (
+            self.layers[-1] = (
                 "lin{}".format(len(self.layers) - 1), 
                 nn.Linear(
                     self.output_size, 
