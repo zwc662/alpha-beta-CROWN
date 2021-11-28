@@ -206,7 +206,7 @@ def main():
         x = x.unsqueeze(0).to(dtype=torch.get_default_dtype(), device=arguments.Config["general"]["device"])
         # first check the model is correct at the input
         logit_pred = model_ori(x)[0]
-        print(logit_pred.shape)
+        print(x.shape, logit_pred.shape)
         exit(0)
         y_pred = torch.max(logit_pred, 0)[1].item()
 
