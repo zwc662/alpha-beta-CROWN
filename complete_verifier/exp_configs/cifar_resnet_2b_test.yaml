@@ -1,7 +1,7 @@
 # This is an example configuration file that contains most useful parameter settings.
 general:
   mode: verified-acc  # Compute verified accuracy.
-  no_incomplete: true
+  no_incomplete
 model:
   name: resnet2b  # This model is defined in model_defs.py. Add your own model definitions there.
   path: models/cifar10_resnet/resnet2b.pth  # Path to PyTorch checkpoint.
