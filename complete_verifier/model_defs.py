@@ -1127,45 +1127,49 @@ class AttitudeController(nn.Module):
         self.layers = None
         self.layer_filters = []
         self.load_from_path(path)
-    
+        self.create_layer_filters()
+
     def forward(self, x):
         return self.layers(x)
     
     def filter(self, idx = None, device = 'cuda'):
         if idx is not None:
+            """
+            self.filter_layer = nn.Linear(
+                            self.output_size, 
+                            1)
+
             weight_mat = torch.zeros(self.output_size, 1)
             weight_mat[idx, 0] = 1.
+            """
+            self.forward = lambda x: self.layer_filters[idx](self.layers(x))
+
         else:
-            weight_mat = torch.eye(self.output_size)
+            #weight_mat = torch.eye(self.output_size)
             # Set specific channel to output
-        self.forward = lambda x: self.layers(x).matmul(weight_mat.to(device)).detach()
+            self.forward = lambda x: self.layers(x)
+        #self.forward = lambda x: self.layers(x).matmul(weight_mat.to(device)).detach()
     
-    def create_layer_filters(self, device = 'cuda'):
+    def create_layer_filters(self):
+        state_dict = self.state_dict()
         for idx in range(self.output_size):    
-            self.layer_filters.append(
-                nn.Sequential(
-                    OrderedDict([
-                        (
-                        "lin_filter",
-                        nn.Linear(self.output_size, 1)
-                        )
-                    ])
-                )
-            )
-            weight_mat = torch.zeros((self.output_size, 1))
+            layer_filter_idx = nn.Linear(self.output_size, 1)
+             
+            weight_mat = np.zeros((self.output_size, 1))
             weight_mat[idx, 0] = 1.
-            # Set specific channel to output
-            
-            self.state_dict()['layer_filter.lin_filter.weight'.format(idx)] = torch.tensor(weight_mat.T.clone())
-            print(self.state_dict().keys())
+            bias_mat = np.zeros((1))
+
+            layer_filter_idx.load_state_dict({'weight': torch.tensor(weight_mat.T), 'bias': torch.tensor(bias_mat.T)})
+        self.layer_filters.append(layer_filter_idx)
         #self.forward = lambda x: self.layers(x).matmul(weight_mat.to(device))      
-        self.forward = lambda x: self.layer_filter(self.layer(x))
+        #self.forward = lambda x: self.layer_filter(self.layer(x))
 
     def load_from_path(self, path = None):
         if path is None:
             path = self.path
         conf_lst = list();
         layers = []
+        state_dict = {}
         weight_mat = None
         bias_mat = None
         with open(path, 'r') as f:
@@ -1214,8 +1218,9 @@ class AttitudeController(nn.Module):
                 
                 layer_tuples = [("lin1", nn.Linear(self.input_size, layers[0]))]
                 layer_tuples.append((layers[self.num_layers], ACTIVS[layers[self.num_layers]])),  
-                
+            
                 for i in range(self.num_layers - 1):
+
                     layer_tuples.append(
                         (
                             "lin{}".format(i + 2), 
@@ -1250,8 +1255,8 @@ class AttitudeController(nn.Module):
                                 ACTIVS[layers[-1]]
                             )
                         )
+                 
                 """
-
                 # To select which channel to output, by default the weight should be an identity matrix
                 layer_tuples.append(
                     (
@@ -1266,6 +1271,9 @@ class AttitudeController(nn.Module):
                 
                 self.layers = nn.Sequential(OrderedDict(layer_tuples))
 
+            state_dict = self.state_dict().copy()
+            print(state_dict.keys())
+            num_layer = 1
             for i_layer in range(len(self.layers)):
                 if not isinstance(self.layers[i_layer], nn.Linear):
                     continue
@@ -1276,13 +1284,11 @@ class AttitudeController(nn.Module):
                 bias_mat = np.zeros((layer.out_features))
                  # Set default weights/bias for the last layer then break
                 
-                """                
+                """       
                 if i_layer == len(self.layers) - 1:
                     weight_mat = np.eye(self.output_size)
-                    print(torch.tensor(weight_mat.T))
-                    self.state_dict()['layers.lin_filter.weight'.format(i_layer)] = torch.tensor(weight_mat.T)
-                    print(self.state_dict()['layers.lin_filter.weight'.format(i_layer)])
-                    self.state_dict()['layers.lin_filter.bias'.format(i_layer)] = torch.tensor(bias_mat.T)
+                    state_dict['layers.lin_filter.weight'.format(i_layer)] = torch.tensor(weight_mat.T)
+                    state_dict['layers.lin_filter.bias'.format(i_layer)] = torch.tensor(bias_mat.T)
                     break
                 """
 
@@ -1293,7 +1299,8 @@ class AttitudeController(nn.Module):
                     coord = np.unravel_index(cnt - offset, weight_mat.shape)
                     np.put(weight_mat, coord, float(line))
                     cnt += 1
-                self.state_dict()['layers.lin{}.weight'.format(i_layer)] = torch.tensor(weight_mat.T)
+                 
+                state_dict['layers.lin{}.weight'.format(num_layer)] = torch.tensor(weight_mat.T)
                 weight_mat = None
 
                 offset = cnt
@@ -1302,12 +1309,15 @@ class AttitudeController(nn.Module):
                     coord = cnt - offset
                     np.put(bias_mat, coord, float(line))
                     cnt += 1
-                self.state_dict()['layers.lin{}.bias'.format(i_layer)] = torch.tensor(bias_mat.T)
+                state_dict['layers.lin{}.bias'.format(num_layer)] = torch.tensor(bias_mat.T)
                 bias_mat = None
-            
-          
+                
+                num_layer += 1
+        
                 
             print(">>>>>>>>>>>>>>Done loading Attitude Controller")
+            self.load_state_dict(state_dict)
+            
             line = f.readline().split('\n')[0] 
             while line:
                 line = f.readline().split('\n')[0] 
