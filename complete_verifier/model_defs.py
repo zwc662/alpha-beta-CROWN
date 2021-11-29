@@ -1163,7 +1163,7 @@ class AttitudeController(nn.Module):
         else:
             weight_mat = np.eye(self.output_size)
             # Set specific channel to output
-        state_dict['layers.lin_filter.bias'] = torch.tensor(weight_mat.T).to(device) 
+        state_dict['layers.lin_filter.weight'] = torch.tensor(weight_mat.T).to(device) 
         self.load_state_dict(state_dict)
                
         #self.forward = lambda x: self.layers(x).matmul(weight_mat.to(device)).detach()
