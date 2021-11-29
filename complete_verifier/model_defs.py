@@ -1126,11 +1126,12 @@ class AttitudeController(nn.Module):
         self.num_layers = None
         self.layers = None
         self.layer_filters = []
-        self.load_from_path(path)
+        
         self.last_weght_mat = None
         self.last_bias_mat = None
-        print(self.layers)
- 
+
+        self.load_from_path(path)
+   
 
     def forward(self, x):
         return self.layers(x)
@@ -1317,9 +1318,7 @@ class AttitudeController(nn.Module):
                 bias_mat = None
                 
                 num_layer += 1
-        
-                print(self.last_bias_mat)
-                print(self.last_weight_mat)
+ 
             print(">>>>>>>>>>>>>>Done loading Attitude Controller")
             self.load_state_dict(state_dict)
         
