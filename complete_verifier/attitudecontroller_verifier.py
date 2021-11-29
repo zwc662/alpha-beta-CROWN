@@ -113,14 +113,6 @@ def main():
     print("Given medium input {}".format(x))
     print("Attitude controller's output {}".format(u_pred))
     import torch.optim as optim
-
-    criterion = torch.nn.MSELoss()
-    optimizer = optim.SGD(model_ori.parameters(), lr=0.001, momentum=0.9)
-    optimizer.zero_grad()
-    loss = criterion(u_pred, 0. * u_pred)
-    loss.backward()
-    optimizer.step()
-  
                 
  
     # Run step by step
@@ -193,7 +185,7 @@ def main():
                     # Redo incomplete_verification since the neural network structure is changed
                     ############ incomplete_verification execution
                     verified_status, init_global_lb, saved_bounds, saved_slopes = incomplete_verifier(
-                        model_ori = model_ori, data = data, 
+                        model_ori = model_ori, data = data_ub, 
                         norm = arguments.Config["specification"]["norm"], \
                         y = y, data_ub=data_ub, data_lb=data_lb, eps=perturb_eps)
  
