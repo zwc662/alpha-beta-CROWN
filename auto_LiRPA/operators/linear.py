@@ -99,7 +99,7 @@ class BoundLinear(Bound):
         input_ub = [xi.upper if hasattr(xi, 'upper') else None for xi in x]
         # transpose and scale each term if necessary.
         input_lb = self._preprocess(*input_lb)
-        
+        print("last_lA", last_lA)
         print("input_lb", input_lb)
         input_ub = self._preprocess(*input_ub)
         lA_y = uA_y = lA_bias = uA_bias = None
