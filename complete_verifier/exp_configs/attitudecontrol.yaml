@@ -12,7 +12,7 @@ init:
   max: [-0.44, -0.54, 0.66, -0.74, 0.86, -0.64]
 specification:
   norm: .inf  # Linf norm (can also be 2 or 1).
-  epsilon: 0.00784313725490196  # epsilon=2./255.
+  epsilon: 100.  # epsilon=2./255.
 solver:
   alpha-crown:
     iteration: 100   # Number of iterations for alpha-CROWN optimization. Alpha-CROWN is used to compute all intermediate layer bounds before branch and bound starts.
