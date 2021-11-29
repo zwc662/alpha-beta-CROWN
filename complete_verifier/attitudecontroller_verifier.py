@@ -164,13 +164,13 @@ def main():
                     pidx = pidx.item()
                 # Filter out all non-pidx output channels so that they output 0 constantly
                 model_ori.filter(pidx, arguments.Config["general"]["device"])
-                y = pidx
+                y = torch.tensor([pidx]).to(arguments.Config["general"]["device"])
                 # Redo incomplete_verification since the neural network structure is changed
                 ############ incomplete_verification execution
                 verified_status, init_global_lb, saved_bounds, saved_slopes = incomplete_verifier(
                     model_ori = model_ori, data = data, 
                     norm = arguments.Config["specification"]["norm"], \
-                    y = None, data_ub=data_ub, data_lb=data_lb, eps=0.)
+                    y = y, data_ub=data_ub, data_lb=data_lb, eps=0.)
                 ############
                 print(verified_status, init_global_lb, saved_bounds)
                 lower_bounds, upper_bounds = saved_bounds[1], saved_bounds[2]
