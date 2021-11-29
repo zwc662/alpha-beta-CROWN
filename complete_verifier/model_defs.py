@@ -1202,7 +1202,7 @@ class AttitudeController(nn.Module):
                 
                 layer_tuples = [("lin1", nn.Linear(self.input_size, layers[0]))]
                 print("Added {}".format(layer_tuples[-1]))
-                layer_tuples.append((layers[self.num_layers], ACTIVS[layers[self.num_layers]])),  
+                layer_tuples.append((layers[self.num_layers] + "1", ACTIVS[layers[self.num_layers]])),  
                 print("Added {}".format(layer_tuples[-1]))
             
                 for i in range(self.num_layers - 1):
@@ -1220,7 +1220,7 @@ class AttitudeController(nn.Module):
                     if ACTIVS[layers[i + 1 + self.num_layers]] is not None:
                         layer_tuples.append(
                             (
-                                layers[i + 1 + self.num_layers],
+                                layers[i + 1 + self.num_layers] + "{}".format(i + 2),
                                 ACTIVS[layers[i + 1 + self.num_layers]]
                             )
                         )
