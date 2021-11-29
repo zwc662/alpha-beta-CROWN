@@ -166,7 +166,7 @@ def main():
                 if isinstance(pidx, torch.Tensor):
                     pidx = pidx.item()
                 # Filter out all non-pidx output channels so that they output 0 constantly
-                model_ori.filter(pidx, arguments.Config["general"]["device"])
+                #model_ori.filter(pidx, arguments.Config["general"]["device"])
                 y = pidx
 
                  
