@@ -90,6 +90,7 @@ def main():
     data_max = torch.tensor(arguments.Config["init"]["max"]).unsqueeze(0).to(arguments.Config["general"]["device"])
     x = (data_max + data_min)/2.
     perturb_eps = torch.max(x - data_min, 1)[0]
+    print(perturb_eps)
 
     # Initialize lists of current and next state ranges and control output ranges 
     X_min, X_max, U_min, U_max, X_nxt, X_min_nxt, X_max_nxt = [data_min], [data_max], [], [], [], [], []
