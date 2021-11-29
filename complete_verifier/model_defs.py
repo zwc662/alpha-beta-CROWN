@@ -1286,6 +1286,7 @@ class AttitudeController(nn.Module):
                  
              
                 # To select which channel to output, by default the weight should be an identity matrix
+                """
                 layer_tuples.append(
                     (
                         "lin_filter".format(self.num_layers + 2), 
@@ -1295,7 +1296,7 @@ class AttitudeController(nn.Module):
                     )
                 )
                 print("Added {}".format(layer_tuples[-1]))
-
+                """
                 
                 self.layers = nn.Sequential(OrderedDict(layer_tuples))
 
@@ -1311,13 +1312,13 @@ class AttitudeController(nn.Module):
                 
                 bias_mat = np.zeros((layer.out_features))
                  # Set default weights/bias for the last layer then break
-                                   
+                """                  
                 if i_layer == len(self.layers) - 1:
                     weight_mat = np.eye(self.output_size)
                     state_dict['layers.lin_filter.weight'.format(i_layer)] = torch.tensor(weight_mat.T)
                     state_dict['layers.lin_filter.bias'.format(i_layer)] = torch.tensor(bias_mat.T)
                     break
-               
+                """
 
                 weight_mat = np.zeros((layer.in_features, layer.out_features))
                 offset = cnt
