@@ -168,7 +168,8 @@ def main():
                 # Filter out all non-pidx output channels so that they output 0 constantly
                 #model_ori.filter(pidx, arguments.Config["general"]["device"])
                 y = pidx
-
+        
+                print(model_ori.layers)
                  
                 init_global_lb = saved_bounds = saved_slopes = None
                 if arguments.Config["general"]["enable_incomplete_verification"] or arguments.Config["general"]["complete_verifier"] == "bab-refine":
@@ -185,7 +186,7 @@ def main():
                         model_ori = model_ori, data = data, 
                         norm = arguments.Config["specification"]["norm"], \
                         y = y, data_ub=data_ub, data_lb=data_lb, eps=0.)
-                    print(model_ori.layers)
+ 
                     ############
                     print(verified_status, init_global_lb, saved_bounds)
                     lower_bounds, upper_bounds = saved_bounds[1], saved_bounds[2]
