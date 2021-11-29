@@ -144,7 +144,10 @@ def main():
                 lower_bounds, upper_bounds = saved_bounds[1], saved_bounds[2]
                 arguments.Config["bab"]["timeout"] -= (time.time()-start_incomplete)
                 ret.append([step, idx, -1, 0, time.time()-start_incomplete, -1, np.inf, np.inf])
+
                 
+            """
+
      
             if arguments.Config["general"]["mode"] == "verified-acc":
                 if arguments.Config["general"]["enable_incomplete_verification"]:
@@ -272,7 +275,7 @@ def main():
                 print(f'Result: Step {step} input range {idx} verification success (with branch and bound)!')
             # Make sure ALL tensors used in this loop are deleted here.
             del init_global_lb, saved_bounds, saved_slopes
-    
+            """
     # some results analysis
     np.set_printoptions(suppress=True)
     ret = np.array(ret)
