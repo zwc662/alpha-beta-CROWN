@@ -95,6 +95,7 @@ class BoundLinear(Bound):
         assert len(x) == 2 or len(x) == 3
         has_bias = len(x) == 3
         # x[0]: input node, x[1]: weight, x[2]: bias
+        print("x", x)
         input_lb = [xi.lower if hasattr(xi, 'lower') else None for xi in x]
         input_ub = [xi.upper if hasattr(xi, 'upper') else None for xi in x]
         # transpose and scale each term if necessary.
