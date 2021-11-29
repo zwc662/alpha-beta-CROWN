@@ -96,7 +96,7 @@ def main():
 
     # Test run the initial control output given a medium state
     with torch.no_grad():
-        for i in range(3):
+        for i in range(0):
             u_pred = model_ori(x)
             print("Given medium input {}".format(x))
             print("Attitude controller's output {}".format(u_pred))
