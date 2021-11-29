@@ -124,7 +124,7 @@ def main():
             x = (data_max + data_min)/2.
             y = None
 
-            """
+    
             if arguments.Config["general"]["enable_incomplete_verification"] or arguments.Config["general"]["complete_verifier"] == "bab-refine":
                 print(">>>>>>>>>>>>>>>Incomplete verification is enabled by default. The intermediate lower and upper bounds will be reused in bab and mip.")
                 start_incomplete = time.time()
@@ -136,9 +136,9 @@ def main():
                 
                 ############ incomplete_verification execution
                 verified_status, init_global_lb, saved_bounds, saved_slopes = incomplete_verifier(
-                    model_ori = model_ori, data = data, 
+                    model_ori = model_ori, data = data_ub, 
                     norm = arguments.Config["specification"]["norm"], \
-                    y = y, data_ub=data_ub, data_lb=data_lb, eps=0.)
+                    y = y, data_ub=data_ub, data_lb=data_lb, eps=None)
                 ############
                 print(verified_status, init_global_lb, saved_bounds)
                 lower_bounds, upper_bounds = saved_bounds[1], saved_bounds[2]
@@ -163,7 +163,7 @@ def main():
             print("init_global_lb: ", init_global_lb)
             print("labels_to_verify: ", labels_to_verify)
             print("saved bounds: ", saved_bounds)
-            """
+     
             for pidx in range(model_ori.output_size): #labels_to_verify:
                 
                 if isinstance(pidx, torch.Tensor):
