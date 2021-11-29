@@ -204,7 +204,10 @@ def main():
                                                     data_ub=data_max, data_lb=data_min, attack_images=targeted_attack_images)
                         #################
 
-
+                    temp = l.copy()
+                    l = - u.copy()/(model_ori.output_size() - 1.)
+                    u = - temp.copy()/(model_ori.output_size() - 1.)
+                    
                     time_cost = time.time() - start_inner
                     print('Step {} input range {} test against {} verification end, final lower bound {}, upper bound {}, time: {}'.format(step, idx, pidx, l, u, time_cost))
                     
