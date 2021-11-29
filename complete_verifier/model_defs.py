@@ -1127,12 +1127,12 @@ class AttitudeController(nn.Module):
         self.layers = None
         self.layer_filters = []
         self.load_from_path(path)
-        self.create_layer_filters()
+        #self.create_layer_filters()
 
     def forward(self, x):
         return self.layers(x)
     
-    def filter(self, idx = None, device = 'cuda'):
+    def filter_(self, idx = None, device = 'cuda'):
         if idx is not None:
             """
             self.filter_layer = nn.Linear(
@@ -1150,6 +1150,22 @@ class AttitudeController(nn.Module):
             #weight_mat = torch.eye(self.output_size)
             # Set specific channel to output
             self.forward = lambda x: self.layers(x)
+        #self.forward = lambda x: self.layers(x).matmul(weight_mat.to(device)).detach()
+    
+    
+    def filter(self, idx = None, device = 'cuda'):
+        state_dict = self.state_dict()
+        
+        if idx is not None:
+            weight_mat = np.zeros([self.output_size, self.output_size])
+            weight_mat[idx, 0] = 1.
+           
+        else:
+            weight_mat = np.eye(self.output_size)
+            # Set specific channel to output
+        state_dict['layers.lin_filter.bias'] = torch.tensor(weight_mat.T).to(device) 
+        self.load_state_dict(state_dict)
+               
         #self.forward = lambda x: self.layers(x).matmul(weight_mat.to(device)).detach()
     
     def create_layer_filters(self):
@@ -1258,7 +1274,7 @@ class AttitudeController(nn.Module):
                             )
                         )
                  
-                """
+             
                 # To select which channel to output, by default the weight should be an identity matrix
                 layer_tuples.append(
                     (
@@ -1268,7 +1284,7 @@ class AttitudeController(nn.Module):
                             self.output_size)
                     )
                 )
-                """
+              
 
                 
                 self.layers = nn.Sequential(OrderedDict(layer_tuples))
@@ -1286,13 +1302,13 @@ class AttitudeController(nn.Module):
                 bias_mat = np.zeros((layer.out_features))
                  # Set default weights/bias for the last layer then break
                 
-                """       
+                     
                 if i_layer == len(self.layers) - 1:
                     weight_mat = np.eye(self.output_size)
                     state_dict['layers.lin_filter.weight'.format(i_layer)] = torch.tensor(weight_mat.T)
                     state_dict['layers.lin_filter.bias'.format(i_layer)] = torch.tensor(bias_mat.T)
                     break
-                """
+               
 
                 weight_mat = np.zeros((layer.in_features, layer.out_features))
                 offset = cnt
