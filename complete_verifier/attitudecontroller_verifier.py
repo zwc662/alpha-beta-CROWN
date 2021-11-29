@@ -109,9 +109,18 @@ def main():
                 model_ori.filter(device = arguments.Config["general"]["device"])
                 #model_ori.to(arguments.Config["general"]["device"])
    
-        u_pred = model_ori(x)
-        print("Given medium input {}".format(x))
-        print("Attitude controller's output {}".format(u_pred))  
+    u_pred = model_ori(x)
+    print("Given medium input {}".format(x))
+    print("Attitude controller's output {}".format(u_pred))
+    import torch.optim as optim
+
+    criterion = torch.nn.MSELoss()
+    optimizer = optim.SGD(model_ori.parameters(), lr=0.001, momentum=0.9)
+    optimizer.zero_grad()
+    loss = criterion(u_pred, 0. * u_pred)
+    loss.backward()
+    optimizer.step()
+  
                 
  
     # Run step by step
