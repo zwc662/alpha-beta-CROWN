@@ -170,7 +170,7 @@ def main():
                 # Filter out all non-pidx output channels so that they output 0 constantly
                 
                 #model_ori.filter(pidx, arguments.Config["general"]["device"])
-                y = pidx
+                y = None
                  
                 init_global_lb = saved_bounds = saved_slopes = None
                 if arguments.Config["general"]["enable_incomplete_verification"] or arguments.Config["general"]["complete_verifier"] == "bab-refine":
