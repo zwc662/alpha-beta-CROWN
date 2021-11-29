@@ -186,7 +186,7 @@ def main():
                     verified_status, init_global_lb, saved_bounds, saved_slopes = incomplete_verifier(
                         model_ori = model_ori, data = data, 
                         norm = arguments.Config["specification"]["norm"], \
-                        y = y, data_ub=data_ub, data_lb=data_lb, eps=None)
+                        y = y, data_ub=data_ub, data_lb=data_lb, eps=perturb_eps)
  
                     ############
                     print(verified_status, init_global_lb, saved_bounds)
@@ -229,7 +229,7 @@ def main():
                             # Main function to run verification
 
                             ################# Run complete verification directly 
-                            l, u, nodes, glb_record = bab(model_ori, x, pidx, arguments.Config["specification"]["norm"], y=y, eps=None,
+                            l, u, nodes, glb_record = bab(model_ori, x, pidx, arguments.Config["specification"]["norm"], y=y, eps=perturb_eps,
                                                         data_ub=data_max, data_lb=data_min, attack_images=targeted_attack_images)
                             #################
 
