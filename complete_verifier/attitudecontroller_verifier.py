@@ -186,7 +186,7 @@ def main():
                     verified_status, init_global_lb, saved_bounds, saved_slopes = incomplete_verifier(
                         model_ori = model_ori, data = data, 
                         norm = arguments.Config["specification"]["norm"], \
-                        y = y, data_ub=data_ub, data_lb=data_lb, eps=perturb_eps)
+                        y = y, data_ub=data_ub, data_lb=data_lb, eps=None)
  
                     ############
                     print(verified_status, init_global_lb, saved_bounds)
