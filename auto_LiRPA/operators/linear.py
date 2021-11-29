@@ -104,7 +104,8 @@ class BoundLinear(Bound):
         lA_y = uA_y = lA_bias = uA_bias = None
         lbias = ubias = 0
         batch_size = last_lA.shape[1] if last_lA is not None else last_uA.shape[1]
-
+        print("last_lA", last_lA.size())
+        print("input_lb", input_lb[1].size())
         # Case #1: No weight/bias perturbation, only perturbation on input.
         if not self.is_input_perturbed(1) and (not has_bias or not self.is_input_perturbed(2)):
             # If last_lA and last_uA are indentity matrices.
@@ -128,8 +129,6 @@ class BoundLinear(Bound):
                     if last_A is None:
                         return None, 0
                     # Just multiply this layer's weight into bound matrices, and produce biases.
-                    print("last_A", last_A.size())
-                    print("input_lb", input_lb[1].size())
                     next_A = last_A.to(input_lb[1]).matmul(input_lb[1])
                     sum_bias = (last_A.to(input_lb[2]).matmul(input_lb[2]) 
                         if has_bias else 0.0)
