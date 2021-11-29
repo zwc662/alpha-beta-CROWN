@@ -1312,13 +1312,14 @@ class AttitudeController(nn.Module):
                     cnt += 1
                 if num_layer == self.num_layers + 1:
                     self.last_bias_mat = np.copy(bias_mat)
-                    print(self.last_bias_mat)
+                    
                 state_dict['layers.lin{}.bias'.format(num_layer)] = torch.tensor(bias_mat.T)
                 bias_mat = None
                 
                 num_layer += 1
         
-                
+                print(self.last_bias_mat)
+                print(self.last_weight_mat)
             print(">>>>>>>>>>>>>>Done loading Attitude Controller")
             self.load_state_dict(state_dict)
         
