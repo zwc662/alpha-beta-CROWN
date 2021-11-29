@@ -159,12 +159,12 @@ def main():
             print("saved bounds: ", saved_bounds)
             """
             for pidx in labels_to_verify:
-                print(pidx)
+        
                 if isinstance(pidx, torch.Tensor):
                     pidx = pidx.item()
                 # Filter out all non-pidx output channels so that they output 0 constantly
                 model_ori.filter(pidx, arguments.Config["general"]["device"])
-
+                y = pidx
                 # Redo incomplete_verification since the neural network structure is changed
                 ############ incomplete_verification execution
                 verified_status, init_global_lb, saved_bounds, saved_slopes = incomplete_verifier(
