@@ -1127,6 +1127,7 @@ class AttitudeController(nn.Module):
         self.layers = None
         self.layer_filters = []
         self.load_from_path(path)
+        self.last_weght_mat = None
         print(self.layers)
  
 
@@ -1140,11 +1141,11 @@ class AttitudeController(nn.Module):
         if idx is not None:
             weight_mat = np.zeros([self.output_size, self.output_size])
             weight_mat[idx, 0] = 1.
-           
+            state_dict['layers.lin{}.weight'.format(self.num_layers + 1)] = torch.tensor(self.last_weight_mat.matmul(weight_mat).T).to(device)           
         else:
             weight_mat = np.eye(self.output_size)
             # Set specific channel to output
-        state_dict['layers.lin_filter.weight'] = torch.tensor(weight_mat.T).to(device) 
+            state_dict['layers.lin{}.weight'.format(self.num_layers + 1)] = torch.tensor(self.last_weight_mat.T).to(device) 
         self.load_state_dict(state_dict)
                
     
@@ -1293,7 +1294,10 @@ class AttitudeController(nn.Module):
                     coord = np.unravel_index(cnt - offset, weight_mat.shape)
                     np.put(weight_mat, coord, float(line))
                     cnt += 1
-                 
+    
+                if num_layer == self.num_layers + 1:
+                    self.last_weight_mat = np.copy(weight_mat)
+
                 state_dict['layers.lin{}.weight'.format(num_layer)] = torch.tensor(weight_mat.T)
                 weight_mat = None
 

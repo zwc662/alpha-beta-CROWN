@@ -100,7 +100,7 @@ def main():
             u_pred = model_ori(x)
             print("Given medium input {}".format(x))
             print("Attitude controller's output {}".format(u_pred))
-            """
+    
             for idx in range(model_ori.output_size):
                 model_ori.filter(idx, arguments.Config["general"]["device"])
                 #model_ori = model_ori.to(arguments.Config["general"]["device"])
@@ -108,7 +108,7 @@ def main():
                 print("Attitude controller filtered {}th output {}".format(idx, u_pred))
                 model_ori.filter(device = arguments.Config["general"]["device"])
                 #model_ori.to(arguments.Config["general"]["device"])
-            """
+   
         u_pred = model_ori(x)
         print("Given medium input {}".format(x))
         print("Attitude controller's output {}".format(u_pred))  
