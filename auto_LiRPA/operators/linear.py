@@ -128,7 +128,7 @@ class BoundLinear(Bound):
                     if last_A is None:
                         return None, 0
                     # Just multiply this layer's weight into bound matrices, and produce biases.
-                    print(type(input_lb[1]))
+                    print(input_lb[1].size())
                     next_A = last_A.to(input_lb[1]).matmul(input_lb[1])
                     sum_bias = (last_A.to(input_lb[2]).matmul(input_lb[2]) 
                         if has_bias else 0.0)
