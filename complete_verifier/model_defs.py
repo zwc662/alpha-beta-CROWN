@@ -1235,7 +1235,9 @@ class AttitudeController(nn.Module):
             else:
                 
                 layer_tuples = [("lin1", nn.Linear(self.input_size, layers[0]))]
+                print("Added {}".format(layer_tuples[-1]))
                 layer_tuples.append((layers[self.num_layers], ACTIVS[layers[self.num_layers]])),  
+                print("Added {}".format(layer_tuples[-1]))
             
                 for i in range(self.num_layers - 1):
 
