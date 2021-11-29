@@ -1311,6 +1311,7 @@ class AttitudeController(nn.Module):
                     cnt += 1
                 if num_layer == self.num_layers + 1:
                     self.last_bias_mat = np.copy(bias_mat)
+                print("Last layer bia ", bias_mat)
                 state_dict['layers.lin{}.bias'.format(num_layer)] = torch.tensor(bias_mat.T)
                 bias_mat = None
                 
