@@ -174,8 +174,9 @@ def main():
                 ############
                 print(verified_status, init_global_lb, saved_bounds)
                 lower_bounds, upper_bounds = saved_bounds[1], saved_bounds[2]
-
-
+                print(lower_bounds)
+                print(upper_bounds)
+                
                 print('##### [Step {}: input range {}] Tested against {} ######'.format(step, idx, pidx))
                 torch.cuda.empty_cache()
                 gc.collect()
