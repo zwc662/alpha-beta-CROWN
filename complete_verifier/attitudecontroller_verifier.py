@@ -121,6 +121,7 @@ def main():
             x = (data_max + data_min)/2.
             y = None
 
+            """
             if arguments.Config["general"]["enable_incomplete_verification"] or arguments.Config["general"]["complete_verifier"] == "bab-refine":
                 print(">>>>>>>>>>>>>>>Incomplete verification is enabled by default. The intermediate lower and upper bounds will be reused in bab and mip.")
                 start_incomplete = time.time()
@@ -129,6 +130,7 @@ def main():
                 data_ub = data_max
                 data_lb = data_min
 
+                
                 ############ incomplete_verification execution
                 verified_status, init_global_lb, saved_bounds, saved_slopes = incomplete_verifier(
                     model_ori = model_ori, data = data, 
@@ -139,7 +141,8 @@ def main():
                 lower_bounds, upper_bounds = saved_bounds[1], saved_bounds[2]
                 arguments.Config["bab"]["timeout"] -= (time.time()-start_incomplete)
                 ret.append([step, idx, -1, 0, time.time()-start_incomplete, -1, np.inf, np.inf])
-
+                
+     
             if arguments.Config["general"]["mode"] == "verified-acc":
                 if arguments.Config["general"]["enable_incomplete_verification"]:
                     # We have initial incomplete bounds.
@@ -152,99 +155,107 @@ def main():
                 raise ValueError("unknown verification mode")
             
             pidx_all_verified = True
-            """
+           
             print("verified_status: ", verified_status)
             print("init_global_lb: ", init_global_lb)
             print("labels_to_verify: ", labels_to_verify)
             print("saved bounds: ", saved_bounds)
             """
-            for pidx in labels_to_verify:
-        
+            for pidx in range(model_ori.output_size): #labels_to_verify:
+                
                 if isinstance(pidx, torch.Tensor):
                     pidx = pidx.item()
                 # Filter out all non-pidx output channels so that they output 0 constantly
                 model_ori.filter(pidx, arguments.Config["general"]["device"])
                 y = torch.tensor([[pidx]]).to(arguments.Config["general"]["device"])
-                # Redo incomplete_verification since the neural network structure is changed
-                ############ incomplete_verification execution
-                verified_status, init_global_lb, saved_bounds, saved_slopes = incomplete_verifier(
-                    model_ori = model_ori, data = data, 
-                    norm = arguments.Config["specification"]["norm"], \
-                    y = y, data_ub=data_ub, data_lb=data_lb, eps=0.)
-                ############
-                print(verified_status, init_global_lb, saved_bounds)
-                lower_bounds, upper_bounds = saved_bounds[1], saved_bounds[2]
-                print(lower_bounds)
-                print(upper_bounds)
 
-                print('##### [Step {}: input range {}] Tested against {} ######'.format(step, idx, pidx))
-                torch.cuda.empty_cache()
-                gc.collect()
+                if arguments.Config["general"]["enable_incomplete_verification"] or arguments.Config["general"]["complete_verifier"] == "bab-refine":
+                    print(">>>>>>>>>>>>>>>Incomplete verification is enabled by default. The intermediate lower and upper bounds will be reused in bab and mip.")
+                    start_incomplete = time.time()
+                
+                    data = x
+                    data_ub = data_max
+                    data_lb = data_min
+                    # Redo incomplete_verification since the neural network structure is changed
+                    ############ incomplete_verification execution
+                    verified_status, init_global_lb, saved_bounds, saved_slopes = incomplete_verifier(
+                        model_ori = model_ori, data = data, 
+                        norm = arguments.Config["specification"]["norm"], \
+                        y = y, data_ub=data_ub, data_lb=data_lb, eps=0.)
+                    ############
+                    print(verified_status, init_global_lb, saved_bounds)
+                    lower_bounds, upper_bounds = saved_bounds[1], saved_bounds[2]
+                    print(lower_bounds)
+                    print(upper_bounds)
 
-                start_inner = time.time()
-                targeted_attack_images = None
+                    print('##### [Step {}: input range {}] Tested against {} ######'.format(step, idx, pidx))
+                    torch.cuda.empty_cache()
+                    gc.collect()
 
-                try:
-                    if arguments.Config["general"]["enable_incomplete_verification"]:
-                        # Reuse results from incomplete results, or from refined MIPs.
-                        # skip the prop that already verified
-                        print(">>>>>>>>>>>>>>> Reuse results from incomplete results, or from refined MIPs. Skip the prop that already verified")
-                        rlb, rub = list(lower_bounds), list(upper_bounds)
-                        rlb[-1] = rlb[-1][0, pidx]
-                        rub[-1] = rub[-1][0, pidx]
-                        if init_global_lb[0].min().item() - arguments.Config["bab"]["decision_thresh"] <= -100.:
-                            print(f"Initial alpha-CROWN with worst bound {init_global_lb[0].min().item()}. We will run branch and bound.")
-                            l, u, nodes, glb_record = rlb[-1].item(), float('inf'), 0, []
-                        elif init_global_lb[0, pidx] >= arguments.Config["bab"]["decision_thresh"]:
-                            print(f"Initial alpha-CROWN verified for label {pidx} with bound {init_global_lb[0, pidx]}")
-                            l, u, nodes, glb_record = rlb[-1].item(), float('inf'), 0, []
-                        else:
-                            if arguments.Config["bab"]["timeout"] < 0:
-                                print(f"Step {step} input range {idx} test agains {pidx} verification failure (running out of time budget).")
+                    start_inner = time.time()
+                    targeted_attack_images = None
+
+                    try:
+                        if arguments.Config["general"]["enable_incomplete_verification"]:
+                            # Reuse results from incomplete results, or from refined MIPs.
+                            # skip the prop that already verified
+                            print(">>>>>>>>>>>>>>> Reuse results from incomplete results, or from refined MIPs. Skip the prop that already verified")
+                            rlb, rub = list(lower_bounds), list(upper_bounds)
+                            rlb[-1] = rlb[-1][0, pidx]
+                            rub[-1] = rub[-1][0, pidx]
+                            if init_global_lb[0].min().item() - arguments.Config["bab"]["decision_thresh"] <= -100.:
+                                print(f"Initial alpha-CROWN with worst bound {init_global_lb[0].min().item()}. We will run branch and bound.")
+                                l, u, nodes, glb_record = rlb[-1].item(), float('inf'), 0, []
+                            elif init_global_lb[0, pidx] >= arguments.Config["bab"]["decision_thresh"]:
+                                print(f"Initial alpha-CROWN verified for label {pidx} with bound {init_global_lb[0, pidx]}")
                                 l, u, nodes, glb_record = rlb[-1].item(), float('inf'), 0, []
                             else:
-                                # feed initialed bounds to save time
-                                l, u, nodes, glb_record = bab(model_ori, x, pidx, arguments.Config["specification"]["norm"], y=y, eps=perturb_eps, data_ub=data_max, data_lb=data_min,
-                                            lower_bounds=lower_bounds, upper_bounds=upper_bounds, reference_slopes=saved_slopes, attack_images=targeted_attack_images)
-                    else:
-                        print(">>>>>>>>>>>>>>> Skipped incomplete verification, and refined MIPs. Run complete_verifier: {}".format(arguments.Config["general"]["complete_verifier"]))
-                        assert arguments.Config["general"]["complete_verifier"] == "bab"  # for MIP and BaB-Refine.
-                        # Main function to run verification
+                                if arguments.Config["bab"]["timeout"] < 0:
+                                    print(f"Step {step} input range {idx} test agains {pidx} verification failure (running out of time budget).")
+                                    l, u, nodes, glb_record = rlb[-1].item(), float('inf'), 0, []
+                                else:
+                                    # feed initialed bounds to save time
+                                    l, u, nodes, glb_record = bab(model_ori, x, pidx, arguments.Config["specification"]["norm"], y=y, eps=perturb_eps, data_ub=data_max, data_lb=data_min,
+                                                lower_bounds=lower_bounds, upper_bounds=upper_bounds, reference_slopes=saved_slopes, attack_images=targeted_attack_images)
+                        else:
+                            print(">>>>>>>>>>>>>>> Skipped incomplete verification, and refined MIPs. Run complete_verifier: {}".format(arguments.Config["general"]["complete_verifier"]))
+                            assert arguments.Config["general"]["complete_verifier"] == "bab"  # for MIP and BaB-Refine.
+                            # Main function to run verification
 
-                        ################# Run complete verification directly 
-                        l, u, nodes, glb_record = bab(model_ori, x, pidx, arguments.Config["specification"]["norm"], y=y, eps=perturb_eps,
-                                                    data_ub=data_max, data_lb=data_min, attack_images=targeted_attack_images)
-                        #################
+                            ################# Run complete verification directly 
+                            l, u, nodes, glb_record = bab(model_ori, x, pidx, arguments.Config["specification"]["norm"], y=y, eps=perturb_eps,
+                                                        data_ub=data_max, data_lb=data_min, attack_images=targeted_attack_images)
+                            #################
 
-                    temp = l.copy()
-                    l = - u.copy()/(model_ori.output_size() - 1.)
-                    u = - temp.copy()/(model_ori.output_size() - 1.)
-                    
-                    time_cost = time.time() - start_inner
-                    print('Step {} input range {} test against {} verification end, final lower bound {}, upper bound {}, time: {}'.format(step, idx, pidx, l, u, time_cost))
-                    
-                    ret.append([step, idx, pidx, l, nodes, time_cost, u, np.inf])
-                    arguments.Config["bab"]["timeout"] -= time_cost
-                    lb_record.append([glb_record])
-                    np.save(save_path, np.array(ret))
+                        temp = l.copy()
+                        l = - u.copy()/(model_ori.output_size() - 1.)
+                        u = - temp.copy()/(model_ori.output_size() - 1.)
+                        
+                        time_cost = time.time() - start_inner
+                        print('Step {} input range {} test against {} verification end, final lower bound {}, upper bound {}, time: {}'.format(step, idx, pidx, l, u, time_cost))
+                        
+                        ret.append([step, idx, pidx, l, nodes, time_cost, u, np.inf])
+                        arguments.Config["bab"]["timeout"] -= time_cost
+                        lb_record.append([glb_record])
+                        np.save(save_path, np.array(ret))
 
-                    if u < arguments.Config["bab"]["decision_thresh"]:
-                        verified_status = "unsafe-bab"
-                        verified_acc -= 1
-                        break
-                    elif l < arguments.Config["bab"]["decision_thresh"]:
-                        if not arguments.Config["bab"]["attack"]["enabled"]:
-                            pidx_all_verified = False
-                            # break to run next sample save time if any label is not verified.
+                        if u < arguments.Config["bab"]["decision_thresh"]:
+                            verified_status = "unsafe-bab"
+                            verified_acc -= 1
                             break
+                        elif l < arguments.Config["bab"]["decision_thresh"]:
+                            if not arguments.Config["bab"]["attack"]["enabled"]:
+                                pidx_all_verified = False
+                                # break to run next sample save time if any label is not verified.
+                                break
 
-                except KeyboardInterrupt:
-                    print('Step {} input range {} test against {} time {}:', step, idx, pidx, time.time()-start_inner, "\n",)
-                    print(ret)
-                    pidx_all_verified = False
+                    except KeyboardInterrupt:
+                        print('Step {} input range {} test against {} time {}:', step, idx, pidx, time.time()-start_inner, "\n",)
+                        print(ret)
+                        pidx_all_verified = False
+                        break
+
                     break
-
-                break
 
             if not pidx_all_verified:
                 verified_acc -= 1
