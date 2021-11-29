@@ -97,12 +97,9 @@ class BoundLinear(Bound):
         # x[0]: input node, x[1]: weight, x[2]: bias
 
         input_lb = [xi.lower if hasattr(xi, 'lower') else None for xi in x]
-        print("input_lb_before", input_lb)
         input_ub = [xi.upper if hasattr(xi, 'upper') else None for xi in x]
         # transpose and scale each term if necessary.
         input_lb = self._preprocess(*input_lb)
-        print("input_lb_after", input_lb)
-        
         input_ub = self._preprocess(*input_ub)
         lA_y = uA_y = lA_bias = uA_bias = None
         lbias = ubias = 0
@@ -131,6 +128,7 @@ class BoundLinear(Bound):
                     if last_A is None:
                         return None, 0
                     # Just multiply this layer's weight into bound matrices, and produce biases.
+                    print(input_lb[1])
                     next_A = last_A.to(input_lb[1]).matmul(input_lb[1])
                     sum_bias = (last_A.to(input_lb[2]).matmul(input_lb[2]) 
                         if has_bias else 0.0)
