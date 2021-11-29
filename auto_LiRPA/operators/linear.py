@@ -104,8 +104,8 @@ class BoundLinear(Bound):
         lA_y = uA_y = lA_bias = uA_bias = None
         lbias = ubias = 0
         batch_size = last_lA.shape[1] if last_lA is not None else last_uA.shape[1]
-        print("last_lA", last_lA.shape)
-        print("input_lb", input_lb[1].size())
+        #print("last_lA", last_lA.shape)
+        #print("input_lb", input_lb[1].size())
         # Case #1: No weight/bias perturbation, only perturbation on input.
         if not self.is_input_perturbed(1) and (not has_bias or not self.is_input_perturbed(2)):
             # If last_lA and last_uA are indentity matrices.
