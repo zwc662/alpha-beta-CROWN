@@ -1247,6 +1247,7 @@ class AttitudeController(nn.Module):
                                 layers[i + 1])
                         )
                     )
+                    print("Added {}".format(layer_tuples[-1]))
                     
                     if ACTIVS[layers[i + 1 + self.num_layers]] is not None:
                         layer_tuples.append(
@@ -1255,7 +1256,10 @@ class AttitudeController(nn.Module):
                                 ACTIVS[layers[i + 1 + self.num_layers]]
                             )
                         )
-                    
+                        print("Added {}".format(layer_tuples[-1]))
+                    else:
+                        print("Not added {}".format(layers[i + 1 + self.num_layers]))
+
                     
                 layer_tuples.append(
                     (
