@@ -169,6 +169,8 @@ def main():
                 model_ori.filter(pidx, arguments.Config["general"]["device"])
                 y = torch.tensor([[pidx]]).to(arguments.Config["general"]["device"])
 
+                 
+                init_global_lb = saved_bounds = saved_slopes = None
                 if arguments.Config["general"]["enable_incomplete_verification"] or arguments.Config["general"]["complete_verifier"] == "bab-refine":
                     print(">>>>>>>>>>>>>>>Incomplete verification is enabled by default. The intermediate lower and upper bounds will be reused in bab and mip.")
                     start_incomplete = time.time()
@@ -176,6 +178,7 @@ def main():
                     data = x
                     data_ub = data_max
                     data_lb = data_min
+
                     # Redo incomplete_verification since the neural network structure is changed
                     ############ incomplete_verification execution
                     verified_status, init_global_lb, saved_bounds, saved_slopes = incomplete_verifier(
