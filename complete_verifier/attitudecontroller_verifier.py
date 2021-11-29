@@ -96,7 +96,7 @@ def main():
 
     # Test run the initial control output given a medium state
     with torch.no_grad():
-        for i in range(0):
+        for i in range(3):
             u_pred = model_ori(x)
             print("Given medium input {}".format(x))
             print("Attitude controller's output {}".format(u_pred))
@@ -185,6 +185,7 @@ def main():
                         model_ori = model_ori, data = data, 
                         norm = arguments.Config["specification"]["norm"], \
                         y = y, data_ub=data_ub, data_lb=data_lb, eps=0.)
+                    print(model_ori.layers)
                     ############
                     print(verified_status, init_global_lb, saved_bounds)
                     lower_bounds, upper_bounds = saved_bounds[1], saved_bounds[2]

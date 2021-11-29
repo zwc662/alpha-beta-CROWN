@@ -1301,8 +1301,7 @@ class AttitudeController(nn.Module):
                 
                 bias_mat = np.zeros((layer.out_features))
                  # Set default weights/bias for the last layer then break
-                
-                     
+                                   
                 if i_layer == len(self.layers) - 1:
                     weight_mat = np.eye(self.output_size)
                     state_dict['layers.lin_filter.weight'.format(i_layer)] = torch.tensor(weight_mat.T)
@@ -1335,9 +1334,10 @@ class AttitudeController(nn.Module):
                 
             print(">>>>>>>>>>>>>>Done loading Attitude Controller")
             self.load_state_dict(state_dict)
-            
+        
             line = f.readline().split('\n')[0] 
             while line:
+   
                 line = f.readline().split('\n')[0] 
             f.close()    
             
