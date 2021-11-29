@@ -1142,6 +1142,7 @@ class AttitudeController(nn.Module):
             weight_mat = torch.zeros(self.output_size, 1)
             weight_mat[idx, 0] = 1.
             """
+            print(len(self.layer_filters), idx)
             layer_filter_idx = self.layer_filters[idx].to(device)
             self.forward = lambda x: layer_filter_idx(self.layers(x))
 
