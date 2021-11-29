@@ -159,9 +159,9 @@ def main():
             print("saved bounds: ", saved_bounds)
             """
             for pidx in labels_to_verify:
+                print(pidx)
                 if isinstance(pidx, torch.Tensor):
                     pidx = pidx.item()
-                
                 # Filter out all non-pidx output channels so that they output 0 constantly
                 model_ori.filter(pidx, arguments.Config["general"]["device"])
 
@@ -176,7 +176,7 @@ def main():
                 lower_bounds, upper_bounds = saved_bounds[1], saved_bounds[2]
                 print(lower_bounds)
                 print(upper_bounds)
-                
+
                 print('##### [Step {}: input range {}] Tested against {} ######'.format(step, idx, pidx))
                 torch.cuda.empty_cache()
                 gc.collect()
