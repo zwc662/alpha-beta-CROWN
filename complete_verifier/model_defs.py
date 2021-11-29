@@ -1127,32 +1127,13 @@ class AttitudeController(nn.Module):
         self.layers = None
         self.layer_filters = []
         self.load_from_path(path)
-        #self.create_layer_filters()
+        print(self.layers)
+ 
 
     def forward(self, x):
         return self.layers(x)
     
-    def filter_(self, idx = None, device = 'cuda'):
-        if idx is not None:
-            """
-            self.filter_layer = nn.Linear(
-                            self.output_size, 
-                            1)
-
-            weight_mat = torch.zeros(self.output_size, 1)
-            weight_mat[idx, 0] = 1.
-            """
-            print(len(self.layer_filters), idx)
-            layer_filter_idx = self.layer_filters[idx].to(device)
-            self.forward = lambda x: layer_filter_idx(self.layers(x))
-
-        else:
-            #weight_mat = torch.eye(self.output_size)
-            # Set specific channel to output
-            self.forward = lambda x: self.layers(x)
-        #self.forward = lambda x: self.layers(x).matmul(weight_mat.to(device)).detach()
-    
-    
+ 
     def filter(self, idx = None, device = 'cuda'):
         state_dict = self.state_dict()
         
@@ -1166,22 +1147,7 @@ class AttitudeController(nn.Module):
         state_dict['layers.lin_filter.weight'] = torch.tensor(weight_mat.T).to(device) 
         self.load_state_dict(state_dict)
                
-        #self.forward = lambda x: self.layers(x).matmul(weight_mat.to(device)).detach()
     
-    def create_layer_filters(self):
-        state_dict = self.state_dict()
-        for idx in range(self.output_size):    
-            layer_filter_idx = nn.Linear(self.output_size, 1)
-             
-            weight_mat = np.zeros((self.output_size, 1))
-            weight_mat[idx, 0] = 1.
-            bias_mat = np.zeros((1))
-
-            layer_filter_idx.load_state_dict({'weight': torch.tensor(weight_mat.T), 'bias': torch.tensor(bias_mat.T)})
-            self.layer_filters.append(layer_filter_idx)
-        #self.forward = lambda x: self.layers(x).matmul(weight_mat.to(device))      
-        #self.forward = lambda x: self.layer_filter(self.layer(x))
-
     def load_from_path(self, path = None):
         if path is None:
             path = self.path

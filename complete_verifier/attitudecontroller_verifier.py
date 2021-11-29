@@ -171,8 +171,6 @@ def main():
                 
                 #model_ori.filter(pidx, arguments.Config["general"]["device"])
                 y = pidx
-        
-                print(model_ori.layers)
                  
                 init_global_lb = saved_bounds = saved_slopes = None
                 if arguments.Config["general"]["enable_incomplete_verification"] or arguments.Config["general"]["complete_verifier"] == "bab-refine":
