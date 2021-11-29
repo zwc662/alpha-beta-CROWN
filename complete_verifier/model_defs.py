@@ -1141,7 +1141,7 @@ class AttitudeController(nn.Module):
         if idx is not None:
             weight_mat = np.zeros([self.output_size, self.output_size])
             weight_mat[idx, 0] = 1.
-            state_dict['layers.lin{}.weight'.format(self.num_layers + 1)] = torch.tensor((self.last_weight_mat * weight_mat).T).to(device)           
+            state_dict['layers.lin{}.weight'.format(self.num_layers + 1)] = torch.tensor(np.matmul(self.last_weight_mat * weight_mat).T).to(device)           
         else:
             weight_mat = np.eye(self.output_size)
             # Set specific channel to output
