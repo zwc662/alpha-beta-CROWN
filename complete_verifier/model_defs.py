@@ -1162,7 +1162,7 @@ class AttitudeController(nn.Module):
             bias_mat = np.zeros((1))
 
             layer_filter_idx.load_state_dict({'weight': torch.tensor(weight_mat.T), 'bias': torch.tensor(bias_mat.T)})
-        self.layer_filters.append(layer_filter_idx)
+            self.layer_filters.append(layer_filter_idx)
         #self.forward = lambda x: self.layers(x).matmul(weight_mat.to(device))      
         #self.forward = lambda x: self.layer_filter(self.layer(x))
 
