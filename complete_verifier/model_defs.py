@@ -1300,7 +1300,6 @@ class AttitudeController(nn.Module):
     
                 if num_layer == self.num_layers + 1:
                     self.last_weight_mat = np.copy(weight_mat)
-                    self.last_bias_mat = np.copy(bias_mat)
                 state_dict['layers.lin{}.weight'.format(num_layer)] = torch.tensor(weight_mat.T)
                 weight_mat = None
 
@@ -1310,6 +1309,8 @@ class AttitudeController(nn.Module):
                     coord = cnt - offset
                     np.put(bias_mat, coord, float(line))
                     cnt += 1
+                if num_layer == self.num_layers + 1:
+                    self.last_bias_mat = np.copy(bias_mat)
                 state_dict['layers.lin{}.bias'.format(num_layer)] = torch.tensor(bias_mat.T)
                 bias_mat = None
                 
