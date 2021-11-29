@@ -1143,6 +1143,7 @@ class AttitudeController(nn.Module):
             weight_mat = np.zeros([self.output_size, self.output_size])
             weight_mat[idx, idx] = 1.
             state_dict['layers.lin{}.weight'.format(self.num_layers + 1)] = torch.tensor(np.dot(self.last_weight_mat, weight_mat).T).to(device)           
+            print(self.last_bias_mat)
             state_dict['layers.lin{}.bias'.format(self.num_layers + 1)] = torch.tensor(np.dot(self.last_bias_mat, weight_mat).T).to(device)           
         else:
             weight_mat = np.eye(self.output_size)
@@ -1311,7 +1312,6 @@ class AttitudeController(nn.Module):
                     cnt += 1
                 if num_layer == self.num_layers + 1:
                     self.last_bias_mat = np.copy(bias_mat)
-                print("Last layer bia ", bias_mat)
                 state_dict['layers.lin{}.bias'.format(num_layer)] = torch.tensor(bias_mat.T)
                 bias_mat = None
                 
