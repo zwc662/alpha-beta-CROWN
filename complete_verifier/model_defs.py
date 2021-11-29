@@ -1271,6 +1271,7 @@ class AttitudeController(nn.Module):
                             self.output_size)
                     )
                 )
+                print("Added {}".format(layer_tuples[-1]))
 
                 if ACTIVS[layers[-1]] is not None:
                         layer_tuples.append(
@@ -1279,6 +1280,9 @@ class AttitudeController(nn.Module):
                                 ACTIVS[layers[-1]]
                             )
                         )
+                    print("Added {}".format(layer_tuples[-1]))
+                else:
+                    print("Not added {}".format(layers[i + 1 + self.num_layers]))
                  
              
                 # To select which channel to output, by default the weight should be an identity matrix
@@ -1290,7 +1294,7 @@ class AttitudeController(nn.Module):
                             self.output_size)
                     )
                 )
-              
+                print("Added {}".format(layer_tuples[-1]))
 
                 
                 self.layers = nn.Sequential(OrderedDict(layer_tuples))
